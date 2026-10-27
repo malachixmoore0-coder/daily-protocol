@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Daily Protocol</title>
+<meta name="theme-color" content="#05040a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Protocol">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+/* home-screen app: clear the status bar and stop rubber-band bounce */
+html{background:#05040a}
+body{-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+.shell{padding-top:calc(14px + env(safe-area-inset-top,0px))!important}
+</style>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tilt+Neon&family=JetBrains+Mono:wght@400;600&family=Chakra+Petch:wght@400;600;700&family=Syne:wght@500;700;800&family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;600&display=swap">
+<style>
+/* Layout: a single-column phone app (max 480px) with a fixed bottom tab bar; four pages; one skin token set drives everything. */
+:root{
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --f-body:"Outfit","Helvetica Neue",Arial,sans-serif;
+  --page:#05040a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--page);margin:0}
+.app{min-height:100vh;background:var(--s-bg);color:var(--s-fg);font-family:var(--s-body);font-size:14px;line-height:1.45;position:relative;transition:background 1s}
+.skin-neon{--s-bg:radial-gradient(120% 50% at 50% 0%,#2a0b3d 0%,#0a0612 55%,#05040a 100%) fixed;--s-fg:#f6e9ff;--s-dim:#b9a3cc;--s-a1:#ff4fd8;--s-a2:#00e5ff;--s-panel:#14061fcc;--s-solid:#14061f;--s-border:#ff4fd855;--s-track:#ffffff17;
+  --s-display:"Tilt Neon",var(--f-body);--s-dw:400;--s-body:var(--f-mono);--s-r:14px;--s-glow:0 0 12px #ff4fd8aa;--s-tglow:0 0 10px #ff4fd8,0 0 26px #ff4fd8;--s-on:#05040a}
+.skin-quest{--s-bg:radial-gradient(90% 50% at 50% 100%,#0b2a66 0%,#040915 60%,#02040a 100%) fixed;--s-fg:#d8ecff;--s-dim:#86a3c4;--s-a1:#4fb3ff;--s-a2:#9fd6ff;--s-panel:#0a1c3acc;--s-solid:#0a1c3a;--s-border:#4fb3ff;--s-track:#4fb3ff26;
+  --s-display:"Chakra Petch",var(--f-body);--s-dw:700;--s-body:"Chakra Petch",var(--f-body);--s-r:3px;--s-glow:0 0 16px #2f8cff66;--s-tglow:0 0 12px #4fb3ff;--s-on:#02040a}
+.skin-chrome{--s-bg:radial-gradient(80% 40% at 30% 0%,#3a3550 0%,#121218 50%,#07070a 100%) fixed;--s-fg:#eef0f4;--s-dim:#aab3c7;--s-a1:#ffb8e8;--s-a2:#b8c6ff;--s-panel:linear-gradient(160deg,#ffffff1f,#ffffff08);--s-solid:#18181f;--s-border:#ffffff2a;--s-track:#ffffff1a;
+  --s-display:"Syne",var(--f-body);--s-dw:800;--s-body:var(--f-body);--s-r:20px;--s-glow:none;--s-tglow:none;--s-on:#111}
+.skin-solar{--s-bg:#2f7fd8;--s-fg:#fff;--s-dim:#ffffffc2;--s-a1:#ffd27a;--s-a2:#ffffff;--s-panel:#00000033;--s-solid:#1e2a55;--s-border:#ffffff2e;--s-track:#ffffff2e;
+  --s-display:"Instrument Serif",Georgia,serif;--s-dw:400;--s-body:var(--f-body);--s-r:22px;--s-glow:none;--s-tglow:0 1px 10px #0000004d;--s-on:#1b1d4f}
+.skin-solar .page{text-shadow:0 1px 8px #00000040}
+
+canvas.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.shell{position:relative;z-index:1;max-width:480px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px calc(96px + env(safe-area-inset-bottom,0px))}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.top .clock{font-family:var(--f-mono);font-size:12px;color:var(--s-dim)}
+.skins{display:flex;gap:6px}
+.skins button{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+.skins button[aria-pressed=true]{border-color:var(--s-fg)}
+.page{display:flex;flex-direction:column;gap:14px}
+.pnl{background:var(--s-panel);border:1px solid var(--s-border);border-radius:var(--s-r);box-shadow:var(--s-glow);backdrop-filter:blur(10px)}
+.pad{padding:14px}
+.disp{font-family:var(--s-display);font-weight:var(--s-dw);text-shadow:var(--s-tglow);line-height:1.02;margin:0;text-wrap:balance}
+.h1{font-size:38px}.h2{font-size:26px}.h3{font-size:19px}
+.eb{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--s-a2)}
+.dim{color:var(--s-dim)}
+.tnum{font-variant-numeric:tabular-nums}
+.row{display:flex;align-items:center;gap:10px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.app button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.btn{border:1px solid var(--s-border)!important;border-radius:999px!important;padding:7px 14px!important;font-size:12px!important;letter-spacing:.04em}
+.btn.solid{background:var(--s-a1)!important;color:var(--s-on)!important;border-color:var(--s-a1)!important;font-weight:600}
+.app button:focus-visible,.app input:focus-visible,.app label:focus-within{outline:2px solid var(--s-a2);outline-offset:2px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:999px;border:1px solid var(--s-border);white-space:nowrap}
+.chip.hot{border-color:var(--s-a1);color:var(--s-a1)}
+.chk{width:18px;height:18px;flex:none;border:1.5px solid var(--s-a1);border-radius:calc(var(--s-r)/4 + 2px);display:grid;place-items:center}
+.on>.chk,.chk.on{background:var(--s-a1);box-shadow:var(--s-glow)}
+.on>.chk::after,.chk.on::after{content:"";width:7px;height:3px;border:2px solid var(--s-on);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.list{display:flex;flex-direction:column;gap:8px}
+.list>button{display:flex;gap:10px;align-items:center;text-align:left}
+.list>button.on span:last-child{opacity:.5;text-decoration:line-through}
+.hscroll{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.hscroll::-webkit-scrollbar{display:none}
+
+/* tab bar */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;justify-content:center}
+.tabs nav{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:100%;max-width:448px;padding:6px;background:var(--s-solid);border:1px solid var(--s-border);border-radius:calc(var(--s-r) + 8px);box-shadow:var(--s-glow),0 10px 30px #0008}
+.tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0;border-radius:var(--s-r);color:var(--s-dim);text-decoration:none;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.tabs a svg{width:20px;height:20px}
+.tabs a[aria-current=page]{color:var(--s-on);background:var(--s-a1);box-shadow:var(--s-glow)}
+
+/* today dial */
+.dial svg{width:100%;height:auto;display:block}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* train */
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.days button{display:flex;flex-direction:column;align-items:center;padding:8px 0;border-radius:var(--s-r);border:1px solid var(--s-track)!important;font-size:11px}
+.days button small{font-size:8px;letter-spacing:.06em;color:var(--s-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.days button[aria-pressed=true]{border-color:var(--s-a1)!important;box-shadow:var(--s-glow)}
+.days button.today{font-weight:700}
+.ex{overflow:hidden}
+.demo{position:relative;aspect-ratio:16/10;background:radial-gradient(80% 90% at 50% 100%,var(--s-track),transparent),#0005;display:grid;place-items:center;overflow:hidden;border-bottom:1px solid var(--s-border)}
+.demo video,.demo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.demo .scan{position:absolute;left:0;right:0;height:40%;background:linear-gradient(transparent,color-mix(in srgb,var(--s-a2) 18%,transparent),transparent);animation:scan 2.6s linear infinite}
+@keyframes scan{from{top:-40%}to{top:100%}}
+.demo .lbl{position:relative;text-align:center;padding:0 20px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.demo .badge{position:absolute;top:10px;left:10px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:3px 7px;border-radius:999px;background:#000a;color:#fff}
+.ex .body{padding:14px;display:flex;flex-direction:column;gap:10px}
+.sets{display:flex;gap:8px;flex-wrap:wrap}
+.sets button{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--s-a1)!important;font-size:12px;font-weight:600}
+.sets button.on{background:var(--s-a1);color:var(--s-on);box-shadow:var(--s-glow)}
+.sets button:disabled{opacity:.4;cursor:default}
+.cues{margin:0;padding-left:16px;font-size:12px;color:var(--s-dim)}
+.rest{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:21;display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--s-solid);border:1px solid var(--s-a1);border-radius:999px;box-shadow:var(--s-glow);font-family:var(--f-mono)}
+
+/* fuel */
+.meal{display:grid;grid-template-columns:96px 1fr;overflow:hidden}
+.meal .ph{position:relative;min-height:120px;background:linear-gradient(160deg,var(--s-track),transparent),#0006;display:grid;place-items:center;overflow:hidden}
+.meal .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.meal .ph span{font-family:var(--s-display);font-weight:var(--s-dw);font-size:17px;opacity:.6;text-align:center;padding:0 6px;overflow-wrap:anywhere}
+.meal .bd{padding:12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.meal.cur{border-color:var(--s-a1)}
+.meal.past{opacity:.55}
+.meal ul{margin:0;padding-left:16px;font-size:12px}
+.water{display:flex;gap:4px;height:30px;align-items:flex-end}
+.water i{flex:1;height:100%;border-radius:4px;background:var(--s-track)}
+.water i.f{background:var(--s-a2);box-shadow:var(--s-glow)}
+
+/* progress */
+.compare{position:relative;aspect-ratio:3/4;overflow:hidden;border-radius:var(--s-r);border:1px solid var(--s-border);background:#0006;touch-action:pan-y}
+.compare img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.compare .after{clip-path:inset(0 0 0 var(--cut,50%))}
+.compare .div{position:absolute;top:0;bottom:0;left:var(--cut,50%);width:2px;background:var(--s-a1);box-shadow:var(--s-glow)}
+.compare .div::after{content:"⟷";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:var(--s-a1);color:var(--s-on);display:grid;place-items:center;font-size:14px}
+.compare input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.compare .tagl,.compare .tagr{position:absolute;bottom:12px;font-family:var(--s-display);font-weight:var(--s-dw);font-size:22px;color:#fff;text-shadow:0 2px 10px #000}
+.compare .tagl{left:14px}.compare .tagr{right:14px}
+.strip{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:14px 12px;background:#000c;border-radius:var(--s-r);position:relative}
+.strip::-webkit-scrollbar{display:none}
+.strip::before,.strip::after{content:"";position:absolute;left:0;right:0;height:8px;background:repeating-linear-gradient(90deg,transparent 0 8px,#ffffff30 8px 16px)}
+.strip::before{top:3px}.strip::after{bottom:3px}
+.frame{flex:none;width:118px;display:flex;flex-direction:column;gap:4px;text-align:left}
+.frame .ph{aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:linear-gradient(170deg,#ffffff1a,#0000);position:relative;border:1px solid #ffffff26}
+.frame .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.frame .wk{font-family:var(--f-mono);font-size:10px;color:#fff;letter-spacing:.1em}
+.frame .sub{font-size:10px;color:#ffffffa0}
+.frame.example{opacity:.5}
+.sil{position:absolute;inset:0;display:grid;place-items:center}
+.sil svg{width:60%;height:auto;opacity:.5}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stats .pnl{padding:10px;text-align:center}
+.stats b{display:block;font-family:var(--s-display);font-weight:var(--s-dw);font-size:24px;text-shadow:var(--s-tglow)}
+.stats span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--s-dim)}
+.field{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--s-dim)}
+.field input{font:inherit;font-size:14px;color:var(--s-fg);background:#0004;border:1px solid var(--s-border);border-radius:calc(var(--s-r)/2 + 4px);padding:9px 10px;width:100%}
+.modal{position:fixed;inset:0;z-index:40;background:#000c;display:flex;align-items:flex-end;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet{width:100%;max-width:448px;max-height:100%;overflow-y:auto;background:var(--s-solid);border:1px solid var(--s-border);border-radius:calc(var(--s-r) + 6px);padding:16px;display:flex;flex-direction:column;gap:12px}
+.ghostwrap{position:relative;aspect-ratio:3/4;border-radius:var(--s-r);overflow:hidden;background:#0006}
+.ghostwrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ghostwrap .ghost{opacity:.35;mix-blend-mode:screen}
+.toast{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:50;padding:8px 14px;border-radius:999px;background:var(--s-solid);border:1px solid var(--s-border);font-size:12px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="app skin-neon" id="app">
+  <canvas class="fx" id="fx"></canvas>
+  <div class="shell">
+    <div class="top"><span class="clock tnum" id="clock"></span><div class="skins" id="skins" aria-label="Skin"></div></div>
+    <main class="page" id="page"></main>
+  </div>
+  <div class="tabs"><nav id="tabs" aria-label="Pages"></nav></div>
+  <div id="overlay"></div>
+</div>
+
+<script>
+/* ======================= DATA ======================= */
+const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const EX=(n,sets,reps,cues,demo)=>({n,sets,reps,cues,demo:demo||null});
+const WEEK={
+  Mon:{w:"Push A",d:"Upper Chest & Shoulder Focus",pin:true,lift:[
+    EX("Smith Machine Incline Press",4,"6–8",["Bench at about 30°, bar touches upper chest","Elbows about 45° from your sides, drive up smoothly"],{job:"b88937bf-3b41-4abe-8838-dd139ef10771"}),
+    EX("DB Flat Press",3,"8–10",["Pin shoulder blades back and down","Lower to chest level, press up and slightly in"],{job:"e6d08a99-e77d-4a2a-a791-8996bf5ee952"}),
+    EX("Cable Low-to-High Flyes",3,"12–15",["Pulleys low, slight bend in the elbows","Sweep hands up to chin height and squeeze upper chest"],{job:"e847d2b4-a02d-4d74-b951-4d690af58f9c"}),
+    EX("Seated DB Shoulder Press",3,"8–10",["Back flat on the pad, start at ear level","Press overhead without clanking the bells"],{job:"09fc282d-04e3-4682-a055-1a205b7bf5a5"}),
+    EX("Cable Rope Pushdowns",3,"10–12",["Elbows pinned to your sides","Split the rope apart at the bottom"],{job:"05b506d1-6f11-4654-b5f7-499e94b75eec"})]},
+  Tue:{w:"Pull A",d:"Back, Rear Delts & Biceps",pin:false,lift:[
+    EX("Lat Pulldowns",4,"8–10",["Chest up, pull the bar to your upper chest","Lead with the elbows, control the return"],{job:"accfb440-3f17-4e1c-b8f4-f4d3eb319ee0"}),
+    EX("Seated Cable Rows",3,"8–10",["Sit tall, pull the handle to your belly button","Squeeze shoulder blades together at the end"],{job:"6d43ac7a-2947-4c69-946b-a4f4510d0c38"}),
+    EX("Single-Arm DB Rows",3,"10–12",["Knee and hand on the bench, back flat","Row toward your hip, not your chest"],{job:"7b2bbecc-36c8-4455-99ae-9399f22e00c7"}),
+    EX("Cable Face Pulls",4,"15",["Rope at face height","Pull to your forehead, elbows high, hands apart"],{job:"fa9f29c9-e940-444b-8998-829bfa8aa992"}),
+    EX("Incline DB Curls",3,"10–12",["Arms hang behind your torso","Upper arms stay still, 3-second lowering"],{job:"00dc4fef-0e9d-484a-b60d-017755a4f3f1"})]},
+  Wed:{w:"Active Recovery",d:"Rest / light movement",pin:true,lift:[]},
+  Thu:{w:"Legs & Core",d:"Lower body",pin:false,lift:[
+    EX("Smith Machine Squats or Leg Press",4,"8–10",["Feet shoulder-width","Down to parallel, drive through your heels"],{job:"042128a0-d184-40c8-b885-cf2c675c00c2"}),
+    EX("DB RDLs",3,"8–10",["Soft knees, push your hips back","Bells slide to mid-shin with a flat back"],{job:"16083aef-5dda-40f0-ae0a-f1e841c7f633"}),
+    EX("Leg Extensions",3,"12–15",["Pause and squeeze at the top","Control the way down"],{job:"aaf41834-6bbe-4282-b34f-d1880a37d9ad"}),
+    EX("Seated Leg Curls",3,"12–15",["Hips pinned to the seat","Full curl, slow return"],{job:"68fe4897-c525-4549-9b91-30e480c1b8dd"})]},
+  Fri:{w:"Upper Body Pump",d:"Chest & Arm Priority",pin:true,lift:[
+    EX("Incline DB Press",4,"8–10",["Bench at about 30°, deep stretch at the bottom","Press up over the upper chest"],{job:"6993a809-6f41-4851-b2d4-f68e85a2a61b"}),
+    EX("Pec Deck Flyes",3,"12–15",["Slight elbow bend","Bring the pads together, 1-second squeeze"],{job:"16aea5ca-bf7f-4de9-b813-f90ecd2d41f5"}),
+    EX("Cable Lateral Raises",4,"12–15",["Cable runs behind your body","Lead with the elbow up to shoulder height"],{job:"aa663113-6d39-40d6-b91a-f127f941debb"}),
+    EX("Bicep Curl / Tricep Extension Cable Superset",3,"12",["Curls, then straight into triceps","No rest between the two"],{job:"da69dd86-d57d-4568-9b1e-f9c480b0b2a0"})]},
+  Sat:{w:"Rest",d:"Recovery",pin:false,lift:[]},
+  Sun:{w:"Rest",d:"Recovery",pin:false,lift:[]}
+};
+const MEALS=[
+  {id:"wake",img:"c8b1c532-2c4f-4ef1-91ae-279dfa3930b6",t:450,n:"Wake-Up Water",k:"Hydrate",opts:["16–20 oz water right away"],why:"Rehydrate before the morning stack.",lift:false},
+  {id:"pump",img:"896f04b6-20f1-434f-84f4-5331d3f2f8ee",t:490,n:"Pre-Workout Pump Hack",k:"Pump",opts:["16–20 oz cold water","A light pinch of sea salt"],why:"About 20 minutes before Planet Fitness, for more blood volume, vascularity and pump.",lift:true},
+  {id:"creatine",img:"43782c37-cf9b-4105-bd86-23d5fd74c9f0",t:570,n:"Creatine",k:"Creatine",opts:["5 g creatine with water, pre- or post-workout"],why:"Daily strength and recovery staple.",lift:true},
+  {id:"m1",t:600,n:"Meal 1 · Post-Workout Breakfast",k:"M1",img:"84912d37-f4c9-41bc-9a7f-e7df0fd4ca19",opts:["4 eggs, egg whites or scrambled eggs","+ 2 slices toast or a bagel, OR oats"],why:"Fast amino acids for GHK-Cu, and it refills muscle glycogen.",pair:["Omega-3 with this meal (or Meal 2)"]},
+  {id:"m2",t:780,n:"Meal 2 · Pre-Work Lunch",k:"M2",img:"3483591f-f85f-47e4-af95-faebdeda5218",opts:["Grilled chicken breast, OR ground beef / steak","Over white rice (or a potato base)"],why:"Simple, easily digested protein and carbs before your shift starts.",pair:["Omega-3 here if you skipped it at Meal 1"]},
+  {id:"m3",t:1080,n:"Meal 3 · Work Shift Meal",k:"M3",img:"ea82b47c-09d7-485a-afb9-6261b7b332d2",opts:["Chipotle burrito bowl: double chicken or barbacoa","White rice, cheese, guac","Or a packed clean protein bowl"],why:"High-protein, high-calorie clean fuel to sustain the vascular pump.",pair:["Keep water steady through the shift"]},
+  {id:"snack",t:1350,n:"Home · Light Snack",k:"Snack",img:"a783355d-1d47-4618-ae84-c9da8932c1e8",opts:["Light protein snack, only if hungry"],why:"Wind-down fuel without a heavy stomach before sleep.",optional:true}
+];
+function blocks(day){
+  const W=WEEK[day],L=W.lift.length>0;
+  return [
+    {s:450,e:465,n:"Wake Up & Hydrate",short:"Wake",x:"Drink 16–20 oz water.",items:["16–20 oz water"]},
+    {s:465,e:510,n:"Morning Stack",short:"AM Stack",x:"Sub-Q pins, then the oral stack.",items:["Wolverine 5u Sub-Q","KPV 5u Sub-Q","GHK-Cu Sub-Q","Hims Chew","Vitamin C","B12","Zinc","Omega-3 (with Meal 1 or 2)"]},
+    {s:510,e:570,n:L?"PF · "+W.w:W.w,short:L?W.w:"Recover",x:L?W.d+". 45–60 min.":"No lifting today. Walk, stretch, recover.",items:L?["Pump hack water 20 min before","Workout logged in Train","Creatine 5 g"]:["Light walk / stretch"],go:"train"},
+    {s:600,e:780,n:"Post-Workout & Meal 1",short:"Meal 1",x:"Shower, then high protein + easy carbs.",items:["Shower","Meal 1"],go:"fuel"},
+    {s:780,e:810,n:"Meal 2 · Pre-Work",short:"Meal 2",x:"Clean protein + rice before leaving.",items:["Meal 2"],go:"fuel"},
+    {s:810,e:840,n:"Commute",short:"Commute",x:"Head out to work.",items:[]},
+    {s:840,e:1320,n:"Work Shift",short:"Work",x:"Meal 3 at 6:00 PM. Keep water steady.",items:["Meal 3 at 6:00 PM","Steady water"],go:"fuel"},
+    {s:1350,e:1365,n:"Arrive Home",short:"Home",x:"Wind down. Light protein snack if needed.",items:["Wind down"]},
+    {s:1365,e:1380,n:"Evening Stack",short:"PM Stack",x:W.pin?"Glutathione pin night: 30 units Sub-Q.":"OFF night. No glutathione.",items:W.pin?["Glutathione 30u Sub-Q"]:[]},
+    {s:1380,e:1410,n:"Sleep",short:"Sleep",x:"8-hour recovery window.",items:["Lights out by 11:30 PM"]}
+  ];
+}
+/* Higgsfield results that load once media access is on (url: null until then) */
+const MEDIA={};
+["00dc4fef-0e9d-484a-b60d-017755a4f3f1", "042128a0-d184-40c8-b885-cf2c675c00c2", "05b506d1-6f11-4654-b5f7-499e94b75eec", "09fc282d-04e3-4682-a055-1a205b7bf5a5", "16083aef-5dda-40f0-ae0a-f1e841c7f633", "16aea5ca-bf7f-4de9-b813-f90ecd2d41f5", "68fe4897-c525-4549-9b91-30e480c1b8dd", "6993a809-6f41-4851-b2d4-f68e85a2a61b", "6d43ac7a-2947-4c69-946b-a4f4510d0c38", "7b2bbecc-36c8-4455-99ae-9399f22e00c7", "aa663113-6d39-40d6-b91a-f127f941debb", "aaf41834-6bbe-4282-b34f-d1880a37d9ad", "accfb440-3f17-4e1c-b8f4-f4d3eb319ee0", "b88937bf-3b41-4abe-8838-dd139ef10771", "da69dd86-d57d-4568-9b1e-f9c480b0b2a0", "e6d08a99-e77d-4a2a-a791-8996bf5ee952", "e847d2b4-a02d-4d74-b951-4d690af58f9c", "fa9f29c9-e940-444b-8998-829bfa8aa992"].forEach(i=>MEDIA[i]="media/"+i+".mp4");
+["3483591f-f85f-47e4-af95-faebdeda5218", "84912d37-f4c9-41bc-9a7f-e7df0fd4ca19", "a783355d-1d47-4618-ae84-c9da8932c1e8", "ea82b47c-09d7-485a-afb9-6261b7b332d2", "c8b1c532-2c4f-4ef1-91ae-279dfa3930b6", "896f04b6-20f1-434f-84f4-5331d3f2f8ee", "43782c37-cf9b-4105-bd86-23d5fd74c9f0"].forEach(i=>MEDIA[i]="media/"+i+".jpg");
+
+/* ======================= HELPERS ======================= */
+const $=s=>document.querySelector(s);
+const fmt=m=>{m=((m%1440)+1440)%1440;let h=Math.floor(m/60),mm=m%60,ap=h>=12?"PM":"AM";h=h%12||12;return h+":"+String(mm).padStart(2,"0")+" "+ap};
+const fmtS=m=>fmt(m).replace(" AM","a").replace(" PM","p");
+const dur=x=>{x=Math.max(0,Math.round(x));const h=Math.floor(x/60),mm=x%60;return h?`${h}h ${mm}m`:`${mm}m`};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+const dkey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const weekStart=d=>{const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x};
+const nowMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes()};
+function info(bl,m){let c=-1;bl.forEach((b,i)=>{if(m>=b.s)c=i});const inB=c>=0&&m<bl[c].e;return{c,inB,next:bl[c+1]||null,cur:c>=0?bl[c]:null}}
+const local={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
+function toast(t){const el=document.createElement("div");el.className="toast";el.textContent=t;$("#app").appendChild(el);setTimeout(()=>el.remove(),2400)}
+
+/* ======================= STATE + STORAGE ======================= */
+const S={skin:local.get("dp-skin","neon"),trainDay:null,days:{},progress:[],rest:null,cut:50,upload:null,view:null,store:"local"};
+let DB=null,ASSETS=null,BASE=null;
+const today=()=>dkey(new Date());
+const dayDoc=k=>(S.days[k]||(S.days[k]={checks:{},sets:{},meals:{},water:0}));
+let writing=false,dirty=new Set();
+async function saveDay(k){
+  if(!DB){local.set("dp-days",S.days);return}
+  dirty.add(k);if(writing)return;writing=true;
+  while(dirty.size){const key=[...dirty][0];dirty.delete(key);try{await DB.doc(`${BASE}/days/${key}`).set(S.days[key])}catch(e){toast("Couldn't save. Check your connection.")}}
+  writing=false;
+}
+/* on-device photo store (IndexedDB) for when cloud storage isn't available */
+const IDB={db:null,open(){return this.db||(this.db=new Promise((res,rej)=>{const r=indexedDB.open("daily-protocol",1);r.onupgradeneeded=()=>r.result.createObjectStore("progress",{keyPath:"id"});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
+  async tx(mode,fn){const db=await this.open();return new Promise((res,rej)=>{const t=db.transaction("progress",mode),out=fn(t.objectStore("progress"));t.oncomplete=()=>res(out&&out.result);t.onerror=()=>rej(t.error)})},
+  all(){return this.tx("readonly",s=>s.getAll())},put(v){return this.tx("readwrite",s=>s.put(v))},del(id){return this.tx("readwrite",s=>s.delete(id))}};
+let idbOK=false;
+async function loadLocalProgress(){
+  try{const rows=await IDB.all();idbOK=true;
+    const legacy=local.get("dp-progress",[]).filter(p=>!rows.some(r=>r.id===p.id));
+    S.progress.forEach(p=>{if(p.data&&p.data.startsWith("blob:"))URL.revokeObjectURL(p.data)});
+    S.progress=rows.map(r=>({id:r.id,weight:r.weight,note:r.note,takenAt:r.takenAt,data:URL.createObjectURL(r.blob)})).concat(legacy).sort((a,b)=>a.id<b.id?-1:1);
+  }catch(e){S.progress=local.get("dp-progress",[])}
+  render();
+}
+async function initStore(){
+  S.days=local.get("dp-days",{});render();await loadLocalProgress();
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+  const c=window.claude;if(!c||!c.use)return;
+  const [db,user,assets]=await Promise.all([c.use("db"),c.use("user"),c.use("assets")]);
+  ASSETS=assets;
+  if(db&&user){
+    try{const id=await user.id();if(!id)return;DB=db;BASE=`data/users/${id}/app`;S.store="cloud";
+      db.collection(`${BASE}/days`).onSnapshot(s=>{s.docs.forEach(d=>{if(!dirty.has(d.id))S.days[d.id]=d.data()});render()});
+      db.collection(`${BASE}/progress`).onSnapshot(s=>{S.progress=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.id<b.id?-1:1);render()});
+    }catch(e){DB=null}
+  }
+  render();
+}
+
+/* ======================= TODAY ======================= */
+function pt(m,r){const a=(m/1440)*2*Math.PI-Math.PI/2;return[160+r*Math.cos(a),160+r*Math.sin(a)]}
+function arcPath(s,e,r){const[x1,y1]=pt(s,r),[x2,y2]=pt(e,r),lg=(e-s)>720?1:0;return`M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 ${lg} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`}
+function pageToday(){
+  const day=DAYS[new Date().getDay()],W=WEEK[day],bl=blocks(day),m=nowMin(),I=info(bl,m),R=120,doc=dayDoc(today());
+  const arcs=bl.map((b,i)=>`<path d="${arcPath(b.s+1,Math.max(b.e,b.s+6)-1,R)}" fill="none" stroke="${i%2?"var(--s-a2)":"var(--s-a1)"}" stroke-width="22" opacity="${i<I.c?.35:i===I.c?1:.75}"/>`).join("");
+  const ticks=[0,360,720,1080].map((t,k)=>{const[x,y]=pt(t,R-30);return`<text x="${x}" y="${y+3}" text-anchor="middle" font-size="9" fill="var(--s-fg)" opacity=".6">${["12a","6a","12p","6p"][k]}</text>`}).join("");
+  const[hx,hy]=pt(m,R+16),[bx,by]=pt(m,R-16);
+  const focus=I.inB?I.cur:I.next,fi=focus?bl.indexOf(focus):-1;
+  const title=I.inB?I.cur.short:I.next?I.next.short:"Sleep",sub=I.inB?dur(I.cur.e-m)+" left":I.next?"in "+dur(I.next.s-m):"Alarm 7:30a";
+  const items=focus&&focus.items.length?`<div class="list">${focus.items.map((t,j)=>{const k=fi+"|"+j,on=doc.checks[k];return`<button class="${on?"on":""}" data-ck="${k}"><span class="chk"></span><span>${esc(t)}</span></button>`}).join("")}</div>`:"";
+  return`<div class="between"><div><div class="eb">${day} · ${new Date().toLocaleDateString(undefined,{month:"short",day:"numeric"})}</div><h1 class="disp h1">${esc(W.w)}</h1></div><span class="chip ${W.pin?"hot":""}">Gluta ${W.pin?"PIN":"OFF"}</span></div>
+  <div class="dial"><svg viewBox="0 0 320 320" aria-label="Day dial"><path d="${arcPath(1410,1890,R)}" fill="none" stroke="var(--s-track)" stroke-width="22"/>${arcs}${ticks}
+   <line x1="${bx}" y1="${by}" x2="${hx}" y2="${hy}" stroke="var(--s-fg)" stroke-width="3" stroke-linecap="round"/><circle cx="${hx}" cy="${hy}" r="5" fill="var(--s-fg)"/>
+   <text x="160" y="138" text-anchor="middle" font-size="10" letter-spacing="2" fill="var(--s-a2)">${I.inB?"NOW":I.next?"UP NEXT · "+fmtS(I.next.s).toUpperCase():"OFF THE CLOCK"}</text>
+   <text x="160" y="174" text-anchor="middle" font-size="${title.length>8?28:34}" fill="var(--s-fg)" style="font-family:var(--s-display);text-shadow:var(--s-tglow)">${esc(title)}</text>
+   <text x="160" y="198" text-anchor="middle" font-size="12" fill="var(--s-fg)" opacity=".75">${sub}</text></svg></div>
+  ${focus?`<section class="pnl pad" style="display:flex;flex-direction:column;gap:10px"><div class="between"><div><div class="eb">${fmt(focus.s)} · ${dur(focus.e-focus.s)}</div><h2 class="disp h2">${esc(focus.n)}</h2></div>${focus.go?`<a class="btn" href="#${focus.go}" style="color:inherit;text-decoration:none">Open ▸</a>`:""}</div><span class="dim">${esc(focus.x)}</span>${items}</section>`:""}
+  <div class="eb">Rest of today</div>
+  <div class="hscroll">${bl.filter(b=>b.s>m).map(u=>`<div class="pnl pad" style="flex:none;min-width:120px;padding:10px 12px"><div class="dim tnum" style="font-size:11px">${fmtS(u.s)}</div><b>${esc(u.short)}</b></div>`).join("")||'<div class="pnl pad">Day complete. Recover.</div>'}</div>`;
+}
+
+/* ======================= TRAIN ======================= */
+function pageTrain(){
+  const todayName=DAYS[new Date().getDay()],day=S.trainDay||todayName,W=WEEK[day],isToday=day===todayName,doc=dayDoc(today());
+  const strip=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<button data-tday="${d}" aria-pressed="${d===day}" class="${d===todayName?"today":""}">${d}<small>${WEEK[d].lift.length?WEEK[d].w.replace("Upper Body ",""):"Rest"}</small></button>`).join("");
+  let doneSets=0,totSets=0;W.lift.forEach((x,i)=>{totSets+=x.sets;for(let s=0;s<x.sets;s++)if(isToday&&doc.sets[`${i}|${s}`])doneSets++});
+  const head=`<div class="days">${strip}</div>
+   <div class="between"><div><div class="eb">${isToday?"Today":day} · 8:30 AM · Planet Fitness</div><h1 class="disp h1">${esc(W.w)}</h1><span class="dim">${esc(W.d)}${W.lift.length?" · 45–60 min":""}</span></div>
+   ${W.lift.length?`<div style="text-align:right"><div class="disp h2 tnum">${doneSets}/${totSets}</div><span class="dim" style="font-size:11px">sets</span></div>`:""}</div>`;
+  if(!W.lift.length)return head+`<section class="pnl pad" style="display:flex;flex-direction:column;gap:8px"><h2 class="disp h2">Recovery day</h2><span class="dim">No lifting on the split today. Light walk, stretch, hit your water. ${W.pin?"Glutathione pin tonight at 10:45 PM.":"Glutathione is OFF tonight."}</span></section>`;
+  const pump=`<section class="pnl pad row"><span class="chip hot">8:10a</span><div><b>Pump hack</b><div class="dim" style="font-size:12px">16–20 oz cold water + a light pinch of sea salt, about 20 minutes before you walk in.</div></div></section>`;
+  const cards=W.lift.map((x,i)=>{
+    const med=x.demo&&MEDIA[x.demo.job];
+    const demo=med?`<video src="${med}" autoplay muted loop playsinline preload="metadata" aria-label="${esc(x.n)} demo"></video>`:`<div class="scan"></div><div class="lbl"><span class="disp h3">${esc(x.n)}</span><span class="dim" style="font-size:11px">${x.demo?"Higgsfield demo is ready. It plays here once media access is on.":"Demo not generated yet"}</span></div>`;
+    const sets=Array.from({length:x.sets},(_,s)=>{const on=isToday&&doc.sets[`${i}|${s}`];return`<button class="${on?"on":""}" data-set="${i}|${s}" ${isToday?"":"disabled"} aria-label="Set ${s+1}">${on?"✓":s+1}</button>`}).join("");
+    return`<article class="pnl ex"><div class="demo">${demo}<span class="badge">${x.demo?"Demo":"Demo pending"}</span></div><div class="body">
+      <div class="between"><h3 class="disp h3">${esc(x.n)}</h3><span class="chip tnum">${x.sets} × ${esc(x.reps)}</span></div>
+      <div class="sets">${sets}</div><ul class="cues">${x.cues.map(c=>`<li>${esc(c)}</li>`).join("")}</ul></div></article>`}).join("");
+  const cre=`<button class="pnl pad row ${isToday&&doc.checks.creatine?"on":""}" data-ck="creatine" ${isToday?"":"disabled"} style="text-align:left"><span class="chk"></span><span><b>Creatine 5 g</b><span class="dim" style="display:block;font-size:12px">With water, pre- or post-workout.</span></span></button>`;
+  return head+(isToday?"":`<div class="chip">Preview. Sets can be logged on ${day}.</div>`)+pump+cards+cre;
+}
+
+/* ======================= FUEL ======================= */
+function pageFuel(){
+  const day=DAYS[new Date().getDay()],L=WEEK[day].lift.length>0,m=nowMin(),doc=dayDoc(today());
+  const list=MEALS.filter(x=>!x.lift||L);
+  const nextI=list.findIndex(x=>!doc.meals[x.id]&&x.t+90>m);
+  const water=doc.water||0;
+  const cards=list.map((x,i)=>{const done=doc.meals[x.id],cur=i===nextI,src=x.img&&MEDIA[x.img];
+    return`<article class="pnl meal ${cur?"cur":""} ${done?"past":""}" ${cur?'style="box-shadow:var(--s-glow)"':""}>
+     <div class="ph">${src?`<img src="${src}" alt="">`:`<span>${esc(x.k)}</span>`}</div>
+     <div class="bd"><div class="between"><span class="eb">${fmt(x.t)}${cur?(x.t>m?" · in "+dur(x.t-m):" · now"):""}</span>${x.optional?'<span class="chip">optional</span>':""}</div>
+      <h3 class="disp h3">${esc(x.n)}</h3><ul>${x.opts.map(o=>`<li>${esc(o)}</li>`).join("")}</ul>
+      <span class="dim" style="font-size:12px">${esc(x.why)}</span>
+      ${x.pair?`<div class="row" style="flex-wrap:wrap;gap:6px">${x.pair.map(p=>`<span class="chip">${esc(p)}</span>`).join("")}</div>`:""}
+      <button class="btn ${done?"":"solid"}" data-meal="${x.id}" style="align-self:flex-start">${done?"✓ Done · undo":"Mark done"}</button></div></article>`}).join("");
+  return`<div><div class="eb">${day} · Picky-Eater Blueprint</div><h1 class="disp h1">Fuel</h1></div>
+   <section class="pnl pad" style="display:flex;flex-direction:column;gap:8px"><div class="between"><div><div class="eb">Water today</div><div class="disp h2 tnum">${water*16} oz</div></div><button class="btn solid" data-water>+16 oz</button></div>
+   <div class="water">${Array.from({length:8},(_,i)=>`<i class="${i<water?"f":""}"></i>`).join("")}</div></section>
+   ${cards}
+   <section class="pnl pad"><div class="eb">Stack rules</div><ul class="cues" style="margin-top:6px"><li>Zinc + GHK-Cu: oral zinc keeps the zinc-to-copper balance in check.</li><li>Omega-3 softgels with Meal 1 or Meal 2. Fats boost absorption.</li><li>Pump hack: 16–20 oz cold water + sea salt 20 min before PF.</li></ul></section>`;
+}
+
+/* ======================= PROGRESS ======================= */
+const SIL=`<svg viewBox="0 0 60 100"><circle cx="30" cy="14" r="9" fill="#fff"/><path d="M14 30 Q30 22 46 30 L50 62 L42 62 L40 96 L33 96 L30 66 L27 96 L20 96 L18 62 L10 62 Z" fill="#fff"/></svg>`;
+const photoSrc=p=>p.photo?"/_blob/"+p.photo:p.data||"";
+function weekStats(wk){
+  const start=new Date(wk+"T00:00:00");let lifts=0,pins=0,meals=0;
+  for(let i=0;i<7;i++){const d=new Date(start);d.setDate(d.getDate()+i);const k=dkey(d),doc=S.days[k];if(!doc)continue;
+    if(Object.keys(doc.sets||{}).length)lifts++;meals+=Object.values(doc.meals||{}).filter(Boolean).length;if(doc.checks&&Object.keys(doc.checks).some(c=>c.startsWith("8|")&&doc.checks[c]))pins++}
+  return{lifts,pins,meals};
+}
+function pageProgress(){
+  const P=S.progress,now=new Date(),wk=dkey(weekStart(now)),has=P.find(p=>p.id===wk),isSun=now.getDay()===0;
+  const daysLeft=(7-now.getDay())%7,stats=weekStats(wk);
+  const first=P[0],last=P[P.length-1];
+  const hero=P.length>=2?`<div class="compare" style="--cut:${S.cut}%"><img src="${photoSrc(first)}" alt="Week 1"><img class="after" src="${photoSrc(last)}" alt="Latest week"><div class="div"></div><span class="tagl">WK ${String(1).padStart(2,"0")}</span><span class="tagr">WK ${String(P.length).padStart(2,"0")}</span><input type="range" min="0" max="100" value="${S.cut}" data-cut aria-label="Compare first and latest week"></div>`
+   :P.length===1?`<button class="compare" data-view="0" style="display:block;width:100%"><img src="${photoSrc(first)}" alt="Week 1"><span class="tagl">WK 01</span><span class="tagr" style="font-size:12px">Compare unlocks at week 2</span></button>`
+   :`<div class="compare" style="display:grid;place-items:center"><div class="sil" style="opacity:.22">${SIL}</div><div style="position:relative;text-align:center;padding:20px"><h2 class="disp h2">Week 1 starts the reel</h2><p class="dim" style="font-size:13px">Every Sunday, take one photo in the same spot, light and pose. From week 2 you can drag to compare your first week against your latest.</p></div></div>`;
+  const frames=P.length?P.map((p,i)=>{const s=weekStats(p.id);return`<button class="frame" data-view="${i}"><div class="ph"><img src="${photoSrc(p)}" alt="Week ${i+1}" loading="lazy"></div><span class="wk">WK ${String(i+1).padStart(2,"0")} · ${new Date(p.id+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span><span class="sub">${p.weight?esc(p.weight)+" lb · ":""}${s.lifts} lifts</span></button>`}).join("")
+   :[1,2,3,4].map(i=>`<div class="frame example"><div class="ph"><div class="sil">${SIL}</div></div><span class="wk">WK 0${i}</span><span class="sub">Example frame</span></div>`).join("");
+  return`<div class="between"><div><div class="eb">Weekly check-in · ${S.store==="cloud"?"saved privately":"saved on this device"}</div><h1 class="disp h1">Progress</h1></div><span class="chip ${isSun&&!has?"hot":""}">${has?"✓ This week done":isSun?"Due today":"Due Sun · "+daysLeft+"d"}</span></div>
+  ${hero}
+  <div class="stats"><div class="pnl"><b class="tnum">${stats.lifts}</b><span>Lift days</span></div><div class="pnl"><b class="tnum">${stats.meals}</b><span>Meals logged</span></div><div class="pnl"><b class="tnum">${stats.pins}</b><span>Gluta pins</span></div></div>
+  <div class="eb">The reel</div>
+  <div class="strip">${frames}</div>
+  <label class="btn solid" style="text-align:center;cursor:pointer;display:block">${has?"Replace this week's photo":"Add week "+(P.length+1)+" photo"}<input type="file" accept="image/*" data-file hidden></label>
+  ${S.store==="local"?'<span class="dim" style="font-size:11px">Photos stay on this device only.</span>':""}`;
+}
+
+/* ---- upload flow ---- */
+function downscale(file,max){return new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?res({blob:b,url:c.toDataURL("image/jpeg",.72)}):rej(),"image/jpeg",.85)};img.onerror=rej;img.src=u})}
+function sheetUpload(){
+  const u=S.upload,prev=S.progress.filter(p=>p.id!==u.wk).slice(-1)[0];
+  return`<div class="modal" data-close><div class="sheet" role="dialog" aria-label="Weekly photo">
+   <div class="between"><h2 class="disp h2">Week ${u.n} check-in</h2><button class="btn" data-close>Cancel</button></div>
+   <div class="ghostwrap"><img src="${u.url}" alt="New photo">${prev&&u.ghost?`<img class="ghost" src="${photoSrc(prev)}" alt="">`:""}</div>
+   ${prev?`<button class="btn" data-ghost>${u.ghost?"Hide":"Show"} last week's ghost to line up your pose</button>`:""}
+   <label class="field" for="wt">Weight (optional)<input id="wt" inputmode="decimal" placeholder="e.g. 182.4" value="${esc(u.weight||"")}"></label>
+   <label class="field" for="nt">Note (optional)<input id="nt" placeholder="How the week felt" value="${esc(u.note||"")}"></label>
+   <button class="btn solid" data-save ${u.busy?"disabled":""}>${u.busy?"Saving…":"Save to the reel"}</button></div></div>`;
+}
+function sheetView(){
+  const i=S.view.i,p=S.progress[i];if(!p)return"";const s=weekStats(p.id);
+  return`<div class="modal" data-close><div class="sheet" role="dialog" aria-label="Week ${i+1}">
+   <div class="between"><h2 class="disp h2">Week ${i+1}</h2><button class="btn" data-close>Close</button></div>
+   <div class="ghostwrap"><img src="${photoSrc(p)}" alt="Week ${i+1}"></div>
+   <div class="dim">${new Date(p.id+"T00:00:00").toLocaleDateString(undefined,{weekday:"short",month:"long",day:"numeric"})}${p.weight?" · "+esc(p.weight)+" lb":""}</div>
+   ${p.note?`<div>${esc(p.note)}</div>`:""}
+   <div class="stats"><div class="pnl"><b>${s.lifts}</b><span>Lift days</span></div><div class="pnl"><b>${s.meals}</b><span>Meals</span></div><div class="pnl"><b>${s.pins}</b><span>Pins</span></div></div>
+   ${S.view.confirm?`<div class="row"><span class="dim" style="flex:1">Delete this week's photo for good?</span><button class="btn" data-del-no>Keep</button><button class="btn solid" data-del-yes>Delete</button></div>`:`<button class="btn" data-del>Delete photo</button>`}</div></div>`;
+}
+async function saveUpload(){
+  const u=S.upload;u.weight=$("#wt")?.value.trim();u.note=$("#nt")?.value.trim();u.busy=true;render();
+  const rec={weight:u.weight||"",note:u.note||"",takenAt:new Date().toISOString()};
+  try{
+    if(DB&&ASSETS){const old=S.progress.find(p=>p.id===u.wk);const r=await ASSETS.upload(u.blob,{type:"image/jpeg"});rec.photo=r.id;await DB.doc(`${BASE}/progress/${u.wk}`).set(rec);if(old&&old.photo&&old.photo!==r.id){try{await ASSETS.delete(old.photo)}catch(e){}}}
+    else if(idbOK){await IDB.put({id:u.wk,...rec,blob:u.blob});local.set("dp-progress",local.get("dp-progress",[]).filter(p=>p.id!==u.wk));await loadLocalProgress()}
+    else{rec.data=u.url;S.progress=S.progress.filter(p=>p.id!==u.wk).concat([{id:u.wk,...rec}]).sort((a,b)=>a.id<b.id?-1:1);if(!local.set("dp-progress",S.progress))toast("Saved for now, but this browser is out of room.")}
+    S.upload=null;toast("Added to the reel");
+  }catch(e){u.busy=false;toast(e&&e.code==="too_large"?"That photo is too large. Try another.":"Couldn't save the photo. Try again.")}
+  render();
+}
+async function deleteView(){
+  const p=S.progress[S.view.i];if(!p)return;
+  try{if(DB){await DB.doc(`${BASE}/progress/${p.id}`).delete();if(ASSETS&&p.photo){try{await ASSETS.delete(p.photo)}catch(e){}}}
+    else{if(idbOK)await IDB.del(p.id);local.set("dp-progress",local.get("dp-progress",[]).filter(x=>x.id!==p.id));if(idbOK)await loadLocalProgress();else S.progress=S.progress.filter(x=>x.id!==p.id)}
+    S.view=null;toast("Photo deleted")}catch(e){toast("Couldn't delete. Try again.")}
+  render();
+}
+
+/* ======================= SHELL ======================= */
+const PAGES={today:["Today",pageToday,'<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'],
+  train:["Train",pageTrain,'<path d="M3 10v4M6 7v10M18 7v10M21 10v4M6 12h12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'],
+  fuel:["Fuel",pageFuel,'<path d="M5 3v8a3 3 0 0 0 6 0V3M8 3v18M16 21V3c2.5 1 4 4 4 8h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'],
+  progress:["Progress",pageProgress,'<rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/>']};
+const route=()=>{const h=location.hash.slice(1);return PAGES[h]?h:"today"};
+const SKINS={neon:"#ff4fd8",quest:"#4fb3ff",chrome:"linear-gradient(135deg,#b8c6ff,#ffb8e8)",solar:"linear-gradient(#2f7fd8,#ffb36b)"};
+const SKY=[[0,["#070b24","#141a46","#2a2a5e"]],[390,["#1b1d4f","#6a4a8c","#f08a5d"]],[480,["#5aa0e6","#f6c28b","#ffb36b"]],[720,["#2f7fd8","#7fbef0","#cfe8f7"]],[1020,["#3a5ba8","#e08a6b","#f7b267"]],[1140,["#22205a","#7a3f84","#e0626b"]],[1260,["#0b1035","#1e2366","#3d2f73"]],[1440,["#070b24","#141a46","#2a2a5e"]]];
+const hx=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const mix=(a,b,t)=>"#"+hx(a).map((v,i)=>Math.round(v+(hx(b)[i]-v)*t).toString(16).padStart(2,"0")).join("");
+function skyAt(m){for(let i=0;i<SKY.length-1;i++){const[a,ca]=SKY[i],[b,cb]=SKY[i+1];if(m>=a&&m<=b){const t=(m-a)/(b-a);return ca.map((c,j)=>mix(c,cb[j],t))}}return SKY[0][1]}
+
+function render(){
+  const app=$("#app"),r=route();
+  app.className="app skin-"+S.skin;
+  app.style.background=S.skin==="solar"?(()=>{const s=skyAt(nowMin());return`linear-gradient(180deg,${s[0]} 0%,${s[1]} 55%,${s[2]} 100%) fixed`})():"";
+  $("#clock").textContent=new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+  $("#skins").innerHTML=Object.entries(SKINS).map(([k,c])=>`<button data-skin="${k}" aria-pressed="${k===S.skin}" aria-label="${k} skin" style="background:${c}"></button>`).join("");
+  $("#tabs").innerHTML=Object.entries(PAGES).map(([k,[n,,ic]])=>`<a href="#${k}" ${k===r?'aria-current="page"':""}><svg viewBox="0 0 24 24">${ic}</svg>${n}</a>`).join("");
+  const keepFocus=document.activeElement&&document.activeElement.id;
+  $("#page").innerHTML=PAGES[r][1]();
+  $("#overlay").innerHTML=(S.upload?sheetUpload():"")+(S.view?sheetView():"")+(S.rest?`<div class="rest" role="status"><span>Rest</span><b class="tnum" id="restT">${Math.max(0,Math.ceil((S.rest-Date.now())/1000))}s</b><button class="btn" data-rest-x>Skip</button></div>`:"");
+  if(keepFocus&&document.getElementById(keepFocus))document.getElementById(keepFocus).focus();
+}
+
+/* ======================= EVENTS ======================= */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button,[data-close]");if(!t)return;const d=t.dataset,doc=dayDoc(today()),k=today();
+  if(d.skin){S.skin=d.skin;local.set("dp-skin",S.skin);render();return}
+  if(d.ck){doc.checks[d.ck]=!doc.checks[d.ck];saveDay(k);render();return}
+  if(d.tday){S.trainDay=d.tday;render();return}
+  if(d.set){const was=doc.sets[d.set];doc.sets[d.set]=!was;if(!was){doc.sets[d.set]=true;S.rest=Date.now()+90000}else delete doc.sets[d.set];saveDay(k);render();return}
+  if("restX" in d){S.rest=null;render();return}
+  if(d.meal){doc.meals[d.meal]=!doc.meals[d.meal];saveDay(k);render();return}
+  if("water" in d){doc.water=((doc.water||0)+1)%9;saveDay(k);render();return}
+  if(d.view!=null){S.view={i:+d.view};render();return}
+  if("ghost" in d){S.upload.ghost=!S.upload.ghost;S.upload.weight=$("#wt").value;S.upload.note=$("#nt").value;render();return}
+  if("save" in d){saveUpload();return}
+  if("del" in d){S.view.confirm=true;render();return}
+  if("delNo" in d){S.view.confirm=false;render();return}
+  if("delYes" in d){deleteView();return}
+  if("close" in d&&(e.target===t||t.tagName==="BUTTON")){if(S.upload&&S.upload.busy)return;S.upload=null;S.view=null;render()}
+});
+document.addEventListener("input",e=>{if(e.target.dataset.cut!=null){S.cut=+e.target.value;e.target.closest(".compare").style.setProperty("--cut",S.cut+"%")}});
+document.addEventListener("change",async e=>{
+  if(e.target.dataset.file==null||!e.target.files[0])return;
+  try{const {blob,url}=await downscale(e.target.files[0],1280),wk=dkey(weekStart(new Date())),idx=S.progress.findIndex(p=>p.id===wk);
+    S.upload={blob,url,wk,n:idx>=0?idx+1:S.progress.length+1,ghost:true};render()}catch(err){toast("That file couldn't be read as a photo.")}
+});
+addEventListener("hashchange",()=>{scrollTo(0,0);render()});
+setInterval(()=>{if(S.rest){const left=S.rest-Date.now();if(left<=0){S.rest=null;toast("Rest done. Next set.");render()}else{const el=$("#restT");if(el)el.textContent=Math.ceil(left/1000)+"s"}}},500);
+setInterval(()=>{if(!S.upload&&!S.view&&document.activeElement.tagName!=="INPUT")render()},30000);
+
+/* ======================= FX ======================= */
+(()=>{const cv=$("#fx"),ctx=cv.getContext("2d");let W,H,p=[],skin=null;
+  const FX={neon:{n:90,i:()=>({x:Math.random()*W,y:Math.random()*H,l:8+Math.random()*22,v:6+Math.random()*10}),d:()=>{ctx.strokeStyle="rgba(160,220,255,.18)";ctx.lineWidth=1;ctx.beginPath();p.forEach(o=>{ctx.moveTo(o.x,o.y);ctx.lineTo(o.x-2,o.y+o.l);o.y+=o.v;o.x-=.6;if(o.y>H){o.y=-o.l;o.x=Math.random()*W*1.1}});ctx.stroke()}},
+    quest:{n:50,i:()=>({x:Math.random()*W,y:Math.random()*H,r:.6+Math.random()*2,v:.3+Math.random()*1.2,a:Math.random()*6}),d:()=>p.forEach(o=>{o.y-=o.v;o.a+=.02;if(o.y<0){o.y=H;o.x=Math.random()*W}ctx.fillStyle=`rgba(90,180,255,${.25+.25*Math.sin(o.a)})`;ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,7);ctx.fill()})},
+    solar:{n:50,i:()=>({x:Math.random()*W,y:Math.random()*H*.4,r:.5+Math.random()*1.3,a:Math.random()*6}),d:()=>{const m=nowMin(),o=m>=1140||m<420?1:m>=1080?(m-1080)/60:m<480?(480-m)/60:0;if(o<=0)return;p.forEach(s=>{s.a+=.03;ctx.fillStyle=`rgba(255,255,255,${o*(.3+.5*Math.abs(Math.sin(s.a)))})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fill()})}}};
+  const rs=()=>{const d=Math.min(2,devicePixelRatio||1);W=cv.width=innerWidth*d;H=cv.height=innerHeight*d;skin=null};rs();addEventListener("resize",rs);
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  (function loop(){const f=FX[S.skin];if(skin!==S.skin){skin=S.skin;p=f?Array.from({length:f.n},f.i):[]}ctx.clearRect(0,0,W,H);if(f)f.d();if(!reduce)requestAnimationFrame(loop)})();
+})();
+
+initStore();
+</script>
+<script>
+if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
