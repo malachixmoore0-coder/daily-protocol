@@ -1,5 +1,5 @@
 // Daily Protocol service worker: caches the app and all media so it opens offline.
-const VERSION="dp-v4";
+const VERSION="dp-v5";
 const CORE=[
   "./",
   "index.html",

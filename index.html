@@ -417,6 +417,15 @@ function logSet(){
   pushRest(SESS.rest.end,next);
   saveSess();render();
 }
+function askBar(v){S.finishAsk=v;render();const el=$(".sess");if(el)el.scrollTo({top:0,behavior:"smooth"})}
+function clearTodaySets(match){ // remove the Today/stats set marks this session wrote
+  if(!SESS||SESS.day!==DAYS[new Date().getDay()])return;
+  const doc=dayDoc(today());Object.keys(doc.sets).forEach(k=>{if(match(k))delete doc.sets[k]});saveDay(today());
+}
+function removeSavedToday(day){
+  const d=today();WEEK[day].lift.forEach(x=>{if(LIFTS[x.n]){LIFTS[x.n]=LIFTS[x.n].filter(s=>s.d!==d);if(!LIFTS[x.n].length)delete LIFTS[x.n]}});saveLifts();
+  if(day===DAYS[new Date().getDay()]){const doc=dayDoc(d);doc.sets={};saveDay(d)}
+}
 function finishWorkout(){
   const W=WEEK[SESS.day],dur=Date.now()-SESS.start,d=today();let vol=0,sets=0;const prs=[];
   W.lift.forEach(ex=>{const log=SESS.log[ex.n];if(!log||!log.length)return;
@@ -456,7 +465,21 @@ function renderSession(){
     <div class="small" style="max-width:300px">${esc(SESS.rest.next)}</div>
     <div class="row"><button class="btn" data-restadd="-15">−15s</button><button class="btn" data-restadd="15">+15s</button><button class="btn solid" data-restskip>Skip</button></div>
     <div class="looks" role="group" aria-label="Timer look">${LOOKS.map(l=>`<button data-look="${l[0]}" aria-pressed="${l[0]===look[0]}">${l[1]}</button>`).join("")}</div></div>`:"";
-  const finishBar=S.finishAsk?`<section class="pnl pad between"><span class="small">End the workout? Sets you didn't log are skipped.</span><span class="row"><button class="btn" data-finishno>Keep going</button><button class="btn solid" data-finishyes>Finish</button></span></section>`:"";
+  const nSets=Object.values(SESS.log).reduce((a,l)=>a+l.length,0);
+  const ask={
+    true:`<b>End or reset this workout?</b><span class="dim small">${nSets} set${nSets===1?"":"s"} logged so far.</span>
+      <button class="btn solid" data-finishyes>Save &amp; finish</button>
+      <button class="btn" data-resetask>Reset workout</button>
+      <button class="btn" data-discardask>Discard without saving</button>
+      <button class="btn" data-finishno>Keep going</button>`,
+    reset:`<b>Reset this workout?</b><span class="dim small">Clears all ${nSets} logged set${nSets===1?"":"s"} and restarts the clock. Nothing is saved.</span>
+      <div class="row"><button class="btn" data-finishno>Cancel</button><button class="btn solid" data-doreset>Reset workout</button></div>`,
+    discard:`<b>Discard this workout?</b><span class="dim small">Closes it without saving. The coach keeps your previous targets.</span>
+      <div class="row"><button class="btn" data-finishno>Cancel</button><button class="btn solid" data-dodiscard>Discard</button></div>`,
+    resetex:`<b>Reset ${esc(ex.n)}?</b><span class="dim small">Clears the ${log.length} set${log.length===1?"":"s"} logged for this exercise.</span>
+      <div class="row"><button class="btn" data-finishno>Cancel</button><button class="btn solid" data-doresetex>Reset exercise</button></div>`
+  }[S.finishAsk];
+  const finishBar=ask?`<section class="pnl pad" style="display:flex;flex-direction:column;gap:8px" role="alertdialog">${ask}</section>`:"";
   return`<div class="sess" role="dialog" aria-label="Workout"><div class="in">
    <div class="between"><button class="btn" data-minimize aria-label="Minimize workout">▾ Hide</button><div style="text-align:center"><div class="eb">${esc(W.w)}</div><div class="disp h2 tnum" id="sessT">${clock(Date.now()-SESS.start)}</div></div><button class="btn" data-finish>Finish</button></div>
    ${finishBar}
@@ -465,7 +488,7 @@ function renderSession(){
    <div><div class="eb">Exercise ${SESS.i+1} of ${n} · ${ex.sets} × ${esc(ex.reps)}</div><h2 class="disp h2">${esc(ex.n)}</h2></div>
    <section class="pnl coach"><div class="between"><span class="eb">Coach</span><span class="chip ${c.up?"hot":""}">${c.tag}</span></div><div class="tgt tnum">${wlabel(ex.n,c.w)} × ${rangeLabel(c.lo,c.hi)}</div><div class="dim small">${esc(c.why)}</div></section>
    ${warm.length?`<div>${warm.map(x=>`<div class="srow warm"><span>Warm-up</span><span class="tnum">${x.w} lb × ${x.r}</span><span></span><span></span></div>`).join("")}</div>`:""}
-   <div>${done}</div>${active}<div>${todo}</div>
+   <div>${done}</div>${log.length?`<button class="btn" data-resetexask style="align-self:flex-start">Reset this exercise</button>`:""}${active}<div>${todo}</div>
    <ul class="cues">${ex.cues.map(q=>`<li>${esc(q)}</li>`).join("")}</ul>
    <div class="between"><button class="btn" data-goex="${SESS.i-1}" ${SESS.i?"":"disabled"}>◂ Previous</button><button class="btn ${log.length>=ex.sets?"solid":""}" data-goex="${SESS.i+1}">${SESS.i<n-1?"Next exercise ▸":"Finish ▸"}</button></div>
   </div>${restV}</div>`;
@@ -597,6 +620,10 @@ function pageTrain(){
   if(!W.lift.length)return head+`<section class="pnl pad" style="display:flex;flex-direction:column;gap:8px"><h2 class="disp h2">Recovery day</h2><span class="dim">No lifting on the split today. Light walk, stretch, hit your water. ${W.pin?"Glutathione pin tonight at 10:45 PM.":"Glutathione is OFF tonight."}</span></section>`;
   const start=SESS?`<section class="pnl resume"><div><div class="eb">Workout in progress</div><b>${esc(WEEK[SESS.day].w)}</b> · <span class="tnum">${clock(Date.now()-SESS.start)}</span></div><button class="btn solid" data-resume>Resume</button></section>`
     :`<button class="btn startbtn" data-start="${day}">Start ${esc(W.w)}</button>`;
+  const savedToday=!SESS&&W.lift.filter(x=>histOf(x.n).some(s=>s.d===today())).length;
+  const saved=savedToday?(S.trainAsk===day
+      ?`<section class="pnl pad" style="display:flex;flex-direction:column;gap:8px" role="alertdialog"><b>Remove today's ${esc(W.w)}?</b><span class="dim small">Deletes the sets saved today for these exercises. The coach goes back to your previous targets.</span><div class="row"><button class="btn" data-trainno>Cancel</button><button class="btn solid" data-removetoday="${day}">Remove</button></div></section>`
+      :`<section class="pnl resume" style="border-color:var(--s-border)"><div><div class="eb">Saved today</div><b>${savedToday} exercise${savedToday===1?"":"s"} logged</b></div><button class="btn" data-removeask="${day}">Remove</button></section>`):"";
   const pump=`<section class="pnl pad row"><span class="chip hot">8:10a</span><div><b>Pump hack</b><div class="dim" style="font-size:12px">16–20 oz cold water + a light pinch of sea salt, about 20 minutes before you walk in.</div></div></section>`;
   const cards=W.lift.map((x,i)=>{
     const med=x.demo&&MEDIA[x.demo.job];
@@ -609,7 +636,7 @@ function pageTrain(){
       <div class="between"><h3 class="disp h3">${esc(x.n)}</h3><span class="chip tnum">${x.sets} × ${esc(x.reps)}</span></div>
       ${coachLine}<ul class="cues">${x.cues.map(c=>`<li>${esc(c)}</li>`).join("")}</ul></div></article>`}).join("");
   const cre=`<button class="pnl pad row ${isToday&&doc.checks.creatine?"on":""}" data-ck="creatine" ${isToday?"":"disabled"} style="text-align:left"><span class="chk"></span><span><b>Creatine 5 g</b><span class="dim" style="display:block;font-size:12px">With water, pre- or post-workout.</span></span></button>`;
-  return head+start+pump+cards+cre;
+  return head+saved+start+pump+cards+cre;
 }
 
 /* ======================= FUEL ======================= */
@@ -756,11 +783,20 @@ document.addEventListener("click",e=>{
     if(d.restadd){if(SESS.rest){SESS.rest.end=Math.max(Date.now()+1000,SESS.rest.end+(+d.restadd)*1000);SESS.rest.total=Math.max(SESS.rest.total,SESS.rest.end-Date.now());pushRest(SESS.rest.end,SESS.rest.next)}saveSess();render();return}
     if(d.look){local.set("dp-look",d.look);render();return}
     if("restskip" in d){if(SESS.rest)pushRest(null);SESS.rest=null;saveSess();render();return}
-    if("finish" in d){S.finishAsk=true;render();return}
+    if("finish" in d){askBar(true);return}
     if("finishno" in d){S.finishAsk=false;render();return}
+    if("resetask" in d){askBar("reset");return}
+    if("discardask" in d){askBar("discard");return}
+    if("resetexask" in d){askBar("resetex");return}
+    if("doreset" in d){if(SESS.rest)pushRest(null);clearTodaySets(()=>true);Object.keys(SESS.log).forEach(k=>{SESS.log[k]=[]});Object.assign(SESS,{start:Date.now(),i:0,draft:null,rest:null});S.finishAsk=false;saveSess();toast("Workout reset.");render();return}
+    if("dodiscard" in d){if(SESS.rest)pushRest(null);clearTodaySets(()=>true);SESS=null;saveSess();S.inSession=false;S.finishAsk=false;wake(false);toast("Workout discarded.");render();return}
+    if("doresetex" in d){if(SESS.rest)pushRest(null);const i=SESS.i;clearTodaySets(k=>k.startsWith(i+"|"));SESS.log[ex.n]=[];SESS.draft=null;SESS.rest=null;S.finishAsk=false;saveSess();toast("Exercise reset.");render();return}
     if("finishyes" in d){finishWorkout();return}
   }
   if("sumclose" in d&&(e.target===t||t.tagName==="BUTTON")){S.summary=null;render();return}
+  if(d.removeask){S.trainAsk=d.removeask;render();return}
+  if("trainno" in d){S.trainAsk=null;render();return}
+  if(d.removetoday){removeSavedToday(d.removetoday);S.trainAsk=null;toast("Today's workout removed.");render();return}
   if("remind" in d){S.remind=true;render();return}
   if("remindclose" in d&&(e.target===t||t.tagName==="BUTTON")){S.remind=false;render();return}
   if(d.rg){PUSH.groups[d.rg]=!PUSH.groups[d.rg];savePush();syncPush();render();return}
