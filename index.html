@@ -190,6 +190,13 @@ canvas.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 .restfull .row{justify-content:center;flex-wrap:wrap}
 .restfull .row .btn{min-width:76px}
 .resumebar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:21;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 16px;background:var(--s-solid);border:1px solid var(--s-a1);border-radius:999px;box-shadow:var(--s-glow);font-size:12px;white-space:nowrap}
+.bell{position:relative;width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--s-border)!important;border-radius:50%!important;color:var(--s-fg)}
+.bell i{position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--s-a1);box-shadow:var(--s-glow)}
+.tog{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--s-track);text-align:left;width:100%}
+.tog .sw{width:44px;height:26px;border-radius:13px;background:var(--s-track);position:relative;grid-row:span 2;transition:background .2s}
+.tog .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--s-fg);transition:transform .2s}
+.tog[aria-pressed=true] .sw{background:var(--s-a1)}
+.tog[aria-pressed=true] .sw::after{transform:translateX(18px);background:var(--s-on)}
 .lift{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--s-track)}
 .lift:last-child{border-bottom:0}
 .pr{color:var(--s-a1);font-weight:700}
@@ -199,7 +206,7 @@ canvas.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 <div class="app skin-neon" id="app">
   <canvas class="fx" id="fx"></canvas>
   <div class="shell">
-    <div class="top"><span class="clock tnum" id="clock"></span><div class="skins" id="skins" aria-label="Skin"></div></div>
+    <div class="top"><span class="clock tnum" id="clock"></span><div class="row" style="gap:10px"><button class="bell" data-remind aria-label="Reminders"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><i id="bellDot" hidden></i></button><div class="skins" id="skins" aria-label="Skin"></div></div></div>
     <main class="page" id="page"></main>
   </div>
   <div class="tabs"><nav id="tabs" aria-label="Pages"></nav></div>
@@ -398,6 +405,7 @@ function logSet(){
   else if(SESS.i<W.lift.length-1){SESS.i++;SESS.draft=null;const nx=W.lift[SESS.i],nc=coach(nx);next=`Next: ${nx.n} · ${wlabel(nx.n,nc.w)} × ${rangeLabel(nc.lo,nc.hi)}`}
   else next="That was the last set. Finish when you're ready.";
   SESS.rest={end:Date.now()+m.rest*1000,total:m.rest*1000,next};
+  pushRest(SESS.rest.end,next);
   saveSess();render();
 }
 function finishWorkout(){
@@ -410,6 +418,7 @@ function finishWorkout(){
   saveLifts();
   const next=W.lift.filter(ex=>histOf(ex.n).length).map(ex=>({n:ex.n,c:coach(ex)}));
   S.summary={w:W.w,dur,vol:Math.round(vol),sets,prs,next};
+  if(SESS.rest)pushRest(null);
   SESS=null;saveSess();S.inSession=false;S.finishAsk=false;wake(false);render();
 }
 function renderSession(){
@@ -453,6 +462,90 @@ function sheetSummary(){
    <div class="stats"><div class="pnl"><b class="tnum">${clock(x.dur)}</b><span>Time</span></div><div class="pnl"><b class="tnum">${x.sets}</b><span>Sets</span></div><div class="pnl"><b class="tnum">${x.vol.toLocaleString()}</b><span>lb moved</span></div></div>
    ${x.prs.length?`<div><div class="eb">New records</div>${x.prs.map(p=>`<div class="lift"><span>${esc(p.n)}</span><span class="pr tnum">${p.e} lb e1RM · +${p.gain}</span></div>`).join("")}</div>`:""}
    <div><div class="eb">Coach · next time</div>${x.next.map(o=>`<div class="lift"><span>${esc(o.n)}<span class="dim small" style="display:block">${esc(o.c.why)}</span></span><span class="chip ${o.c.up?"hot":""} tnum">${wlabel(o.n,o.c.w)}</span></div>`).join("")}</div>
+  </div></div>`;
+}
+
+/* ======================= REMINDERS (Web Push) ======================= */
+const PUSH_URL=""; // the push Worker's URL, filled in after it is deployed
+const RGROUPS=[["morning","Wake + morning stack","7:30 AM water · 7:45 AM pins and oral stack"],["gym","Gym","8:10 AM pump hack · 8:30 AM Planet Fitness (Mon, Tue, Thu, Fri)"],["meals","Meals","10:00 AM · 1:00 PM · 6:00 PM"],["night","Glutathione + lights-out","10:45 PM pin (Mon, Wed, Fri) · 11:00 PM lights-out"],["photo","Sunday progress photo","Sundays at 7:00 PM"],["rest","Rest timer","When rest ends during a workout, even if your phone is locked"]];
+let PUSH=local.get("dp-push",{on:false,id:null,secret:null,key:null,groups:{morning:true,gym:true,meals:true,night:true,photo:true,rest:true}});
+const savePush=()=>local.set("dp-push",PUSH);
+function buildReminders(){
+  const g=PUSH.groups,L=[1,2,4,5],out=[];
+  const add=(grp,id,t,title,body,url,days)=>{if(g[grp])out.push({id,t,title,body,url,days:days||null})};
+  add("morning","wake","07:30","Wake up & hydrate","16–20 oz water now.","./#today");
+  add("morning","stack","07:45","Morning stack","Sub-Q: Wolverine 5u · KPV 5u · GHK-Cu. Oral: Hims Chew, Vit C, B12, Zinc, Omega-3.","./#today");
+  add("gym","pump","08:10","Pump hack","16–20 oz cold water + a pinch of sea salt. Planet Fitness in 20 minutes.","./#fuel",L);
+  L.forEach(d=>{const W=WEEK[DAYS[d]];add("gym","gym"+d,"08:30","Planet Fitness · "+W.w,W.d+". Tap to start your workout.","./#train",[d])});
+  add("meals","m1","10:00","Meal 1 · post-workout","4 eggs + 2 slices toast/bagel or oats. Omega-3 with this meal.","./#fuel");
+  add("meals","m2","13:00","Meal 2 · pre-work","Chicken breast or ground beef/steak over white rice.","./#fuel");
+  add("meals","m3","18:00","Meal 3","Chipotle bowl: double chicken or barbacoa, white rice, cheese, guac.","./#fuel");
+  add("night","gluta","22:45","Glutathione pin","30 units Sub-Q tonight.","./#today",[1,3,5]);
+  add("night","sleep","23:00","Lights out","Your 8-hour recovery window starts now.","./#today");
+  add("photo","photo","19:00","Weekly check-in","Take this week's progress photo.","./#progress",[0]);
+  return out;
+}
+const standalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const pushSupported=()=>"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+const tzName=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch(e){return "America/New_York"}};
+async function api(path,body){
+  const r=await fetch(PUSH_URL+path,body?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}:{});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw Object.assign(new Error(j.error||String(r.status)),{code:j.error,status:r.status});
+  return j;
+}
+const keyBytes=k=>Uint8Array.from(atob(k.replace(/-/g,"+").replace(/_/g,"/")+"===".slice((k.length+3)%4)),c=>c.charCodeAt(0));
+async function enablePush(){
+  if(!PUSH_URL){toast("The reminder server isn't connected yet.");return}
+  if(!pushSupported()){toast(standalone()?"Update iOS to get notifications from home-screen apps.":"Add the app to your Home Screen, then open it from there.");return}
+  S.pushBusy=true;render();
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=="granted"){toast("Notifications are off for this app. Turn them on in Settings → Notifications → Protocol.");return}
+    const reg=await navigator.serviceWorker.ready,{publicKey}=await api("/key");
+    let sub=await reg.pushManager.getSubscription();
+    if(sub&&PUSH.key&&PUSH.key!==publicKey){await sub.unsubscribe();sub=null}
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(publicKey)});
+    const r=await api("/subscribe",{sub:sub.toJSON(),tz:tzName(),reminders:buildReminders()});
+    Object.assign(PUSH,{on:true,id:r.id,secret:r.secret,key:publicKey});savePush();
+    await api("/test",{id:PUSH.id,secret:PUSH.secret});
+    toast("Reminders are on. A test notification is on its way.");
+  }catch(e){toast("Couldn't turn on reminders. Check your connection and try again.")}
+  finally{S.pushBusy=false;render()}
+}
+let syncTimer=null;
+function syncPush(){clearTimeout(syncTimer);syncTimer=setTimeout(async()=>{
+  if(!PUSH.on||!PUSH_URL)return;
+  try{await api("/prefs",{id:PUSH.id,secret:PUSH.secret,tz:tzName(),reminders:buildReminders()})}
+  catch(e){if(e.code==="unknown_subscription"){PUSH.on=false;savePush();render();toast("Reminders were reset. Turn them on again.")}}
+},600)}
+async function disablePush(){
+  try{if(PUSH_URL&&PUSH.id)await api("/unsubscribe",{id:PUSH.id,secret:PUSH.secret})}catch(e){}
+  try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub)await sub.unsubscribe()}catch(e){}
+  PUSH.on=false;PUSH.id=PUSH.secret=null;savePush();toast("Reminders are off.");render();
+}
+function pushRest(at,next){
+  if(!PUSH.on||!PUSH.groups.rest||!PUSH_URL)return;
+  api("/rest",{id:PUSH.id,secret:PUSH.secret,at:at||null,title:"Rest's up",body:next||"Time for your next set."}).catch(()=>{});
+}
+async function checkPush(){ // on launch: drop a subscription iOS has removed, refresh the schedule
+  if(!PUSH.on||!pushSupported())return;
+  try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
+    if(!sub||Notification.permission!=="granted"){PUSH.on=false;savePush();render();return}
+    syncPush()}catch(e){}
+}
+function sheetRemind(){
+  const on=PUSH.on,ready=!!PUSH_URL;
+  const rows=RGROUPS.map(([k,n,t])=>`<button class="tog" data-rg="${k}" aria-pressed="${!!PUSH.groups[k]}"><b>${esc(n)}</b><span class="sw" aria-hidden="true"></span><span class="dim small">${esc(t)}</span></button>`).join("");
+  const status=on?`<div class="chip hot">● On · ${esc(tzName())}</div>`
+    :!ready?`<p class="dim small" style="margin:0">The reminder server isn't connected yet.</p>`
+    :!standalone()?`<p class="small" style="margin:0">To get notifications, open Daily Protocol from your Home Screen icon (Safari → Share → Add to Home Screen), then turn them on here.</p>`
+    :`<button class="btn solid startbtn" data-pushon ${S.pushBusy?"disabled":""}>${S.pushBusy?"Turning on…":"Turn on notifications"}</button>`;
+  return`<div class="modal" data-remindclose><div class="sheet" role="dialog" aria-label="Reminders">
+   <div class="between"><h2 class="disp h2">Reminders</h2><button class="btn" data-remindclose>Done</button></div>
+   ${status}
+   <div>${rows}</div>
+   ${on?`<div class="row"><button class="btn" data-pushtest>Send a test</button><button class="btn" data-pushoff>Turn off</button></div>`:""}
   </div></div>`;
 }
 
@@ -620,11 +713,12 @@ function render(){
   app.className="app skin-"+S.skin;
   app.style.background=S.skin==="solar"?(()=>{const s=skyAt(nowMin());return`linear-gradient(180deg,${s[0]} 0%,${s[1]} 55%,${s[2]} 100%) fixed`})():"";
   $("#clock").textContent=new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+  const dot=$("#bellDot");if(dot)dot.hidden=!PUSH.on;
   $("#skins").innerHTML=Object.entries(SKINS).map(([k,c])=>`<button data-skin="${k}" aria-pressed="${k===S.skin}" aria-label="${k} skin" style="background:${c}"></button>`).join("");
   $("#tabs").innerHTML=Object.entries(PAGES).map(([k,[n,,ic]])=>`<a href="#${k}" ${k===r?'aria-current="page"':""}><svg viewBox="0 0 24 24">${ic}</svg>${n}</a>`).join("");
   const keepFocus=document.activeElement&&document.activeElement.id;
   $("#page").innerHTML=PAGES[r][1]();
-  $("#overlay").innerHTML=(SESS&&S.inSession?renderSession():"")+(SESS&&!S.inSession&&!S.summary?`<div class="resumebar" role="status"><span>${esc(WEEK[SESS.day].w)} · <b class="tnum" id="sessMini">${clock(Date.now()-SESS.start)}</b></span><button class="btn solid" data-resume>Resume</button></div>`:"")+(S.summary?sheetSummary():"")+(S.upload?sheetUpload():"")+(S.view?sheetView():"")+(S.rest?`<div class="rest" role="status"><span>Rest</span><b class="tnum" id="restT">${Math.max(0,Math.ceil((S.rest-Date.now())/1000))}s</b><button class="btn" data-rest-x>Skip</button></div>`:"");
+  $("#overlay").innerHTML=(SESS&&S.inSession?renderSession():"")+(SESS&&!S.inSession&&!S.summary?`<div class="resumebar" role="status"><span>${esc(WEEK[SESS.day].w)} · <b class="tnum" id="sessMini">${clock(Date.now()-SESS.start)}</b></span><button class="btn solid" data-resume>Resume</button></div>`:"")+(S.summary?sheetSummary():"")+(S.remind?sheetRemind():"")+(S.upload?sheetUpload():"")+(S.view?sheetView():"")+(S.rest?`<div class="rest" role="status"><span>Rest</span><b class="tnum" id="restT">${Math.max(0,Math.ceil((S.rest-Date.now())/1000))}s</b><button class="btn" data-rest-x>Skip</button></div>`:"");
   if(keepFocus&&document.getElementById(keepFocus))document.getElementById(keepFocus).focus();
 }
 
@@ -643,14 +737,20 @@ document.addEventListener("click",e=>{
     if(d.dr){const dr=sessDraft(ex);dr.r=Math.max(0,(parseInt(dr.r,10)||0)+(+d.dr));saveSess();render();return}
     if(d.eff){sessDraft(ex).e=d.eff;saveSess();render();return}
     if("logset" in d){logSet();return}
-    if("undo" in d){const log=SESS.log[ex.n];const x=log.pop();if(x){SESS.draft={ex:ex.n,w:x.w,r:x.r,e:x.e};const doc=dayDoc(today());delete doc.sets[`${SESS.i}|${log.length}`];saveDay(today())}SESS.rest=null;saveSess();render();return}
-    if(d.restadd){if(SESS.rest){SESS.rest.end=Math.max(Date.now()+1000,SESS.rest.end+(+d.restadd)*1000);SESS.rest.total=Math.max(SESS.rest.total,SESS.rest.end-Date.now())}saveSess();render();return}
-    if("restskip" in d){SESS.rest=null;saveSess();render();return}
+    if("undo" in d){const log=SESS.log[ex.n];const x=log.pop();if(x){SESS.draft={ex:ex.n,w:x.w,r:x.r,e:x.e};const doc=dayDoc(today());delete doc.sets[`${SESS.i}|${log.length}`];saveDay(today())}if(SESS.rest)pushRest(null);SESS.rest=null;saveSess();render();return}
+    if(d.restadd){if(SESS.rest){SESS.rest.end=Math.max(Date.now()+1000,SESS.rest.end+(+d.restadd)*1000);SESS.rest.total=Math.max(SESS.rest.total,SESS.rest.end-Date.now());pushRest(SESS.rest.end,SESS.rest.next)}saveSess();render();return}
+    if("restskip" in d){if(SESS.rest)pushRest(null);SESS.rest=null;saveSess();render();return}
     if("finish" in d){S.finishAsk=true;render();return}
     if("finishno" in d){S.finishAsk=false;render();return}
     if("finishyes" in d){finishWorkout();return}
   }
   if("sumclose" in d&&(e.target===t||t.tagName==="BUTTON")){S.summary=null;render();return}
+  if("remind" in d){S.remind=true;render();return}
+  if("remindclose" in d&&(e.target===t||t.tagName==="BUTTON")){S.remind=false;render();return}
+  if(d.rg){PUSH.groups[d.rg]=!PUSH.groups[d.rg];savePush();syncPush();render();return}
+  if("pushon" in d){enablePush();return}
+  if("pushoff" in d){disablePush();return}
+  if("pushtest" in d){api("/test",{id:PUSH.id,secret:PUSH.secret}).then(()=>toast("Test sent.")).catch(()=>toast("Couldn't reach the reminder server."));return}
   if(d.skin){S.skin=d.skin;local.set("dp-skin",S.skin);render();return}
   if(d.ck){doc.checks[d.ck]=!doc.checks[d.ck];saveDay(k);render();return}
   if(d.tday){S.trainDay=d.tday;render();return}
@@ -674,7 +774,7 @@ document.addEventListener("change",async e=>{
 });
 addEventListener("hashchange",()=>{scrollTo(0,0);render()});
 setInterval(()=>{if(S.rest){const left=S.rest-Date.now();if(left<=0){S.rest=null;toast("Rest done. Next set.");render()}else{const el=$("#restT");if(el)el.textContent=Math.ceil(left/1000)+"s"}}},500);
-setInterval(()=>{if(!S.upload&&!S.view&&!S.summary&&!(SESS&&S.inSession)&&document.activeElement.tagName!=="INPUT")render()},30000);
+setInterval(()=>{if(!S.upload&&!S.view&&!S.summary&&!S.remind&&!(SESS&&S.inSession)&&document.activeElement.tagName!=="INPUT")render()},30000);
 setInterval(()=>{
   if(!SESS)return;
   const t=$("#sessT");if(t)t.textContent=clock(Date.now()-SESS.start);
@@ -698,6 +798,7 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 
 if(SESS)S.inSession=true; // reopen an unfinished workout where it left off
 initStore();
+checkPush();
 </script>
 <script>
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
