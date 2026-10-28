@@ -1,5 +1,5 @@
 // Daily Protocol service worker: caches the app and all media so it opens offline.
-const VERSION="dp-v3";
+const VERSION="dp-v4";
 const CORE=[
   "./",
   "index.html",
@@ -8,6 +8,12 @@ const CORE=[
   "icons/icon-192.png",
   "icons/icon-512.png",
   "icons/maskable-512.png",
+  "looks/chrome.mp4",
+  "looks/core.mp4",
+  "looks/hourglass.mp4",
+  "looks/neon.mp4",
+  "looks/quest.mp4",
+  "looks/solar.mp4",
   "media/00dc4fef-0e9d-484a-b60d-017755a4f3f1.mp4",
   "media/042128a0-d184-40c8-b885-cf2c675c00c2.mp4",
   "media/05b506d1-6f11-4654-b5f7-499e94b75eec.mp4",

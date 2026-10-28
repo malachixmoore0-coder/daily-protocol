@@ -197,6 +197,15 @@ canvas.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 .tog .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--s-fg);transition:transform .2s}
 .tog[aria-pressed=true] .sw{background:var(--s-a1)}
 .tog[aria-pressed=true] .sw::after{transform:translateX(18px);background:var(--s-on)}
+.restfull{overflow:hidden;background:#000}
+.restfull video.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+.restfull .shade{position:absolute;inset:0;z-index:0;background:radial-gradient(circle at 50% 42%,#0000 0 28%,#000b 78%),linear-gradient(#0000 60%,#000d)}
+.restfull>:not(video):not(.shade){position:relative;z-index:1}
+.restfull .eb,.restfull .small{color:#fff;text-shadow:0 1px 8px #000}
+.looks{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:360px;padding:2px}
+.looks::-webkit-scrollbar{display:none}
+.looks button{flex:none;font-size:11px!important;padding:5px 10px!important;border-radius:999px!important;border:1px solid #ffffff40!important;color:#fff!important;background:#0006!important}
+.looks button[aria-pressed=true]{border-color:var(--s-a1)!important;background:var(--s-a1)!important;color:var(--s-on)!important}
 .lift{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--s-track)}
 .lift:last-child{border-bottom:0}
 .pr{color:var(--s-a1);font-weight:700}
@@ -421,6 +430,10 @@ function finishWorkout(){
   if(SESS.rest)pushRest(null);
   SESS=null;saveSess();S.inSession=false;S.finishAsk=false;wake(false);render();
 }
+/* Rest-timer looks: Higgsfield loops played behind the countdown. */
+const LOOKS=[["neon","Neon Rain","looks/neon.mp4"],["hunter","Hunter","looks/quest.mp4"],["chrome","Liquid Chrome","looks/chrome.mp4"],["sky","Sky","looks/solar.mp4"],["core","Reactor","looks/core.mp4"],["hourglass","Hourglass","looks/hourglass.mp4"],["plain","Plain",""]];
+const SKIN_LOOK={neon:"neon",quest:"hunter",chrome:"chrome",solar:"sky"};
+const restLook=()=>{const k=local.get("dp-look",null);return LOOKS.find(l=>l[0]===k)||LOOKS.find(l=>l[0]===SKIN_LOOK[S.skin])};
 function renderSession(){
   const W=WEEK[SESS.day],n=W.lift.length,ex=W.lift[SESS.i],c=coach(ex),log=SESS.log[ex.n],d=sessDraft(ex),m=meta(ex.n);
   const med=ex.demo&&MEDIA[ex.demo.job];
@@ -437,10 +450,12 @@ function renderSession(){
     </div>
     <div class="effort" role="group" aria-label="How did it feel">${eff}</div>
     <button class="btn solid startbtn" data-logset>Log set · start rest</button></section>`;
-  const restV=SESS.rest?`<div class="restfull" role="dialog" aria-label="Rest timer"><div class="eb">Rest</div>
+  const look=restLook();
+  const restV=SESS.rest?`<div class="restfull" role="dialog" aria-label="Rest timer">${look[2]?`<video class="bg" src="${look[2]}" autoplay muted loop playsinline aria-hidden="true"></video><div class="shade"></div>`:""}<div class="eb">Rest</div>
     <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--s-track)" stroke-width="8"/><circle id="restRing" cx="60" cy="60" r="52" fill="none" stroke="var(--s-a1)" stroke-width="8" stroke-linecap="round" stroke-dasharray="326.7" transform="rotate(-90 60 60)" style="filter:drop-shadow(0 0 6px var(--s-a1))"/></svg><b class="tnum" id="restBig">${clock(SESS.rest.end-Date.now())}</b></div>
     <div class="small" style="max-width:300px">${esc(SESS.rest.next)}</div>
-    <div class="row"><button class="btn" data-restadd="-15">−15s</button><button class="btn" data-restadd="15">+15s</button><button class="btn solid" data-restskip>Skip</button></div></div>`:"";
+    <div class="row"><button class="btn" data-restadd="-15">−15s</button><button class="btn" data-restadd="15">+15s</button><button class="btn solid" data-restskip>Skip</button></div>
+    <div class="looks" role="group" aria-label="Timer look">${LOOKS.map(l=>`<button data-look="${l[0]}" aria-pressed="${l[0]===look[0]}">${l[1]}</button>`).join("")}</div></div>`:"";
   const finishBar=S.finishAsk?`<section class="pnl pad between"><span class="small">End the workout? Sets you didn't log are skipped.</span><span class="row"><button class="btn" data-finishno>Keep going</button><button class="btn solid" data-finishyes>Finish</button></span></section>`:"";
   return`<div class="sess" role="dialog" aria-label="Workout"><div class="in">
    <div class="between"><button class="btn" data-minimize aria-label="Minimize workout">▾ Hide</button><div style="text-align:center"><div class="eb">${esc(W.w)}</div><div class="disp h2 tnum" id="sessT">${clock(Date.now()-SESS.start)}</div></div><button class="btn" data-finish>Finish</button></div>
@@ -739,6 +754,7 @@ document.addEventListener("click",e=>{
     if("logset" in d){logSet();return}
     if("undo" in d){const log=SESS.log[ex.n];const x=log.pop();if(x){SESS.draft={ex:ex.n,w:x.w,r:x.r,e:x.e};const doc=dayDoc(today());delete doc.sets[`${SESS.i}|${log.length}`];saveDay(today())}if(SESS.rest)pushRest(null);SESS.rest=null;saveSess();render();return}
     if(d.restadd){if(SESS.rest){SESS.rest.end=Math.max(Date.now()+1000,SESS.rest.end+(+d.restadd)*1000);SESS.rest.total=Math.max(SESS.rest.total,SESS.rest.end-Date.now());pushRest(SESS.rest.end,SESS.rest.next)}saveSess();render();return}
+    if(d.look){local.set("dp-look",d.look);render();return}
     if("restskip" in d){if(SESS.rest)pushRest(null);SESS.rest=null;saveSess();render();return}
     if("finish" in d){S.finishAsk=true;render();return}
     if("finishno" in d){S.finishAsk=false;render();return}
