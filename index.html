@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Daily Protocol</title>
-<meta name="theme-color" content="#05040a">
+<meta name="theme-color" content="#0b1610">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,14 +14,14 @@
 <link rel="icon" href="icons/icon-192.png">
 <style>
 /* home-screen app: clear the status bar and stop rubber-band bounce */
-html{background:#05040a}
+html{background:#0b1610}
 body{-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
 .shell{padding-top:calc(14px + env(safe-area-inset-top,0px))!important}
 </style>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tilt+Neon&family=JetBrains+Mono:wght@400;600&family=Chakra+Petch:wght@400;600;700&family=Syne:wght@500;700;800&family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=Tilt+Neon&family=JetBrains+Mono:wght@400;600&family=Chakra+Petch:wght@400;600;700&family=Syne:wght@500;700;800&family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;600&display=swap">
 <style>
 /* Layout: a single-column phone app (max 480px) with a fixed bottom tab bar; four pages; one skin token set drives everything. */
 :root{
@@ -40,6 +40,11 @@ body{background:var(--page);margin:0}
   --s-display:"Chakra Petch",var(--f-body);--s-dw:700;--s-body:"Chakra Petch",var(--f-body);--s-r:3px;--s-glow:0 0 16px #2f8cff66;--s-tglow:0 0 12px #4fb3ff;--s-on:#02040a}
 .skin-chrome{--s-bg:radial-gradient(80% 40% at 30% 0%,#3a3550 0%,#121218 50%,#07070a 100%) fixed;--s-fg:#eef0f4;--s-dim:#aab3c7;--s-a1:#ffb8e8;--s-a2:#b8c6ff;--s-panel:linear-gradient(160deg,#ffffff1f,#ffffff08);--s-solid:#18181f;--s-border:#ffffff2a;--s-track:#ffffff1a;
   --s-display:"Syne",var(--f-body);--s-dw:800;--s-body:var(--f-body);--s-r:20px;--s-glow:none;--s-tglow:none;--s-on:#111}
+.skin-gridiron{--s-bg:radial-gradient(110% 40% at 50% -8%,#2d4d39 0%,#14281d 42%,#0b1610 100%) fixed,repeating-linear-gradient(90deg,#ffffff06 0 56px,#0000 56px 112px) fixed,#0b1610;--s-fg:#f1f4ef;--s-dim:#9fb5a7;--s-a1:#f2b632;--s-a2:#e8eee9;--s-panel:#13261bd9;--s-solid:#102018;--s-border:#ffffff1f;--s-track:#ffffff17;
+  --s-display:"Barlow Condensed","Arial Narrow",var(--f-body);--s-dw:700;--s-body:"Barlow",var(--f-body);--s-r:10px;--s-glow:none;--s-tglow:none;--s-on:#141414}
+.skin-gridiron .disp{text-transform:uppercase;letter-spacing:.01em}
+.skin-gridiron .eb{color:var(--s-a1)}
+.skin-gridiron .pnl{backdrop-filter:none}
 .skin-solar{--s-bg:#2f7fd8;--s-fg:#fff;--s-dim:#ffffffc2;--s-a1:#ffd27a;--s-a2:#ffffff;--s-panel:#00000033;--s-solid:#1e2a55;--s-border:#ffffff2e;--s-track:#ffffff2e;
   --s-display:"Instrument Serif",Georgia,serif;--s-dw:400;--s-body:var(--f-body);--s-r:22px;--s-glow:none;--s-tglow:0 1px 10px #0000004d;--s-on:#1b1d4f}
 .skin-solar .page{text-shadow:0 1px 8px #00000040}
@@ -206,6 +211,10 @@ canvas.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 .looks::-webkit-scrollbar{display:none}
 .looks button{flex:none;font-size:11px!important;padding:5px 10px!important;border-radius:999px!important;border:1px solid #ffffff40!important;color:#fff!important;background:#0006!important}
 .looks button[aria-pressed=true]{border-color:var(--s-a1)!important;background:var(--s-a1)!important;color:var(--s-on)!important}
+.fire{border-left:3px solid var(--s-a1)}
+.lvl{display:flex;gap:4px}
+.lvl i{flex:1;height:4px;border-radius:2px;background:var(--s-track)}
+.lvl i.on{background:var(--s-a1)}
 .lift{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--s-track)}
 .lift:last-child{border-bottom:0}
 .pr{color:var(--s-a1);font-weight:700}
@@ -225,54 +234,91 @@ canvas.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 <script>
 /* ======================= DATA ======================= */
 const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-const EX=(n,sets,reps,cues,demo)=>({n,sets,reps,cues,demo:demo||null});
+const EX=(n,sets,reps,cues,demo,o)=>({n,sets,reps,cues,demo:demo||null,...(o||{})});
+const BW={bw:true},POW={bw:true,power:true};
+// Speed-day drill: logged as done, with its own rest.
+const DR=(n,sets,dist,rest,cues)=>({n,sets,reps:"1",dist,rest,cues,drill:true,demo:null});
+const WARMUP=DR("Dynamic Warm-Up",1,"10 min",0,["Jog, A-skips, high knees, butt kicks, leg swings","Finish with two build-up runs at 70%"]);
+/* Running-back off-season: 4 lift days (power first, then strength and size) + 2 field speed days. */
 const WEEK={
-  Mon:{w:"Push A",d:"Upper Chest & Shoulder Focus",pin:true,lift:[
-    EX("Smith Machine Incline Press",4,"6–8",["Bench at about 30°, bar touches upper chest","Elbows about 45° from your sides, drive up smoothly"],{job:"b88937bf-3b41-4abe-8838-dd139ef10771"}),
-    EX("DB Flat Press",3,"8–10",["Pin shoulder blades back and down","Lower to chest level, press up and slightly in"],{job:"e6d08a99-e77d-4a2a-a791-8996bf5ee952"}),
-    EX("Cable Low-to-High Flyes",3,"12–15",["Pulleys low, slight bend in the elbows","Sweep hands up to chin height and squeeze upper chest"],{job:"e847d2b4-a02d-4d74-b951-4d690af58f9c"}),
-    EX("Seated DB Shoulder Press",3,"8–10",["Back flat on the pad, start at ear level","Press overhead without clanking the bells"],{job:"09fc282d-04e3-4682-a055-1a205b7bf5a5"}),
-    EX("Cable Rope Pushdowns",3,"10–12",["Elbows pinned to your sides","Split the rope apart at the bottom"],{job:"05b506d1-6f11-4654-b5f7-499e94b75eec"})]},
-  Tue:{w:"Pull A",d:"Back, Rear Delts & Biceps",pin:false,lift:[
-    EX("Lat Pulldowns",4,"8–10",["Chest up, pull the bar to your upper chest","Lead with the elbows, control the return"],{job:"accfb440-3f17-4e1c-b8f4-f4d3eb319ee0"}),
-    EX("Seated Cable Rows",3,"8–10",["Sit tall, pull the handle to your belly button","Squeeze shoulder blades together at the end"],{job:"6d43ac7a-2947-4c69-946b-a4f4510d0c38"}),
-    EX("Single-Arm DB Rows",3,"10–12",["Knee and hand on the bench, back flat","Row toward your hip, not your chest"],{job:"7b2bbecc-36c8-4455-99ae-9399f22e00c7"}),
-    EX("Cable Face Pulls",4,"15",["Rope at face height","Pull to your forehead, elbows high, hands apart"],{job:"fa9f29c9-e940-444b-8998-829bfa8aa992"}),
+  Mon:{w:"Lower · Power + Strength",s:"Lower",t:"lower",d:"Jumps, heavy squats, hinge",pin:true,lift:[
+    EX("Box Jumps",4,"3",["Land soft in a quarter squat and step down","Full reset between jumps; max height every rep"],null,POW),
+    EX("Barbell Back Squat",5,"5",["In the squat rack with the safety pins set just below your bottom position","Bar on upper back, brace hard, sit to parallel, drive up fast"]),
+    EX("DB RDLs",4,"6–8",["Soft knees, push your hips back","Bells slide to mid-shin with a flat back"],{job:"16083aef-5dda-40f0-ae0a-f1e841c7f633"}),
+    EX("DB Walking Lunges",3,"10",["10 steps each leg","Long stride, back knee almost touches the floor"]),
+    EX("Seated Leg Curls",3,"10–12",["Hips pinned to the seat","Full curl, slow return"],{job:"68fe4897-c525-4549-9b91-30e480c1b8dd"}),
+    EX("Smith Machine Calf Raise",4,"12–15",["Balls of your feet on a plate, full stretch at the bottom","Pause 1 second at the top"]),
+    EX("Hanging Knee Raises",3,"12",["No swinging","Curl your pelvis up, lower slowly"],null,BW)]},
+  Tue:{w:"Upper · Strength",s:"Upper",t:"upper",d:"Explosive push, heavy press and pull",pin:false,lift:[
+    EX("Explosive Push-Ups",3,"5",["Push hard enough for your hands to leave the floor","Reset between reps"],null,POW),
+    EX("Smith Machine Bench Press",5,"5",["Shoulder blades pinned, bar to mid-chest","Controlled down, drive up fast"]),
+    EX("Lat Pulldowns",4,"6–8",["Chest up, pull the bar to your upper chest","Lead with the elbows, control the return"],{job:"accfb440-3f17-4e1c-b8f4-f4d3eb319ee0"}),
+    EX("Seated DB Shoulder Press",3,"6–8",["Back flat on the pad, start at ear level","Press overhead without clanking the bells"],{job:"09fc282d-04e3-4682-a055-1a205b7bf5a5"}),
+    EX("Single-Arm DB Rows",3,"8–10",["Knee and hand on the bench, back flat","Row toward your hip, not your chest"],{job:"7b2bbecc-36c8-4455-99ae-9399f22e00c7"}),
+    EX("Cable Face Pulls",3,"15",["Rope at face height","Pull to your forehead, elbows high, hands apart"],{job:"fa9f29c9-e940-444b-8998-829bfa8aa992"}),
     EX("Incline DB Curls",3,"10–12",["Arms hang behind your torso","Upper arms stay still, 3-second lowering"],{job:"00dc4fef-0e9d-484a-b60d-017755a4f3f1"})]},
-  Wed:{w:"Active Recovery",d:"Rest / light movement",pin:true,lift:[]},
-  Thu:{w:"Legs & Core",d:"Lower body",pin:false,lift:[
-    EX("Smith Machine Squats or Leg Press",4,"8–10",["Feet shoulder-width","Down to parallel, drive through your heels"],{job:"042128a0-d184-40c8-b885-cf2c675c00c2"}),
-    EX("DB RDLs",3,"8–10",["Soft knees, push your hips back","Bells slide to mid-shin with a flat back"],{job:"16083aef-5dda-40f0-ae0a-f1e841c7f633"}),
+  Wed:{w:"Speed + Agility",s:"Speed",t:"speed",d:"Field: starts, cuts, hills",pin:true,speed:true,lift:[
+    WARMUP,
+    DR("10-Yard Starts",6,"10 yd",60,["Two-point stance, push out low","First three steps short and powerful"]),
+    DR("20-Yard Accelerations",4,"20 yd",90,["Stay low for the first 10 yards, then rise","Full speed, walk back to rest"]),
+    DR("Pro Agility (5-10-5)",6,"5-10-5",90,["Touch each line and plant on your outside foot","Stay low through the turns"]),
+    DR("L-Drill (3 Cones)",4,"L-drill",90,["Tight turns around the cones","Eyes up, like you're reading a hole"]),
+    DR("Hill Sprints",6,"15 sec",90,["Drive your knees and pump your arms","Walk down to recover"])]},
+  Thu:{w:"Lower · Power + Single-Leg",s:"Lower",t:"lower",d:"Jumps, split squats, glutes",pin:false,lift:[
+    EX("Broad Jumps",4,"3",["Swing your arms and jump as far as you can","Stick the landing for 2 seconds"],null,POW),
+    EX("Bulgarian Split Squats",4,"8",["8 reps each leg, rear foot on the bench","Torso tall, front knee tracks over your toes"]),
+    EX("Leg Press",4,"10–12",["Feet shoulder-width, middle of the platform","Go deep but keep your lower back on the pad"]),
+    EX("Smith Machine Hip Thrust",4,"8–10",["Upper back on the bench, bar on your hips over a pad","Drive through your heels and squeeze your glutes for 1 second"]),
     EX("Leg Extensions",3,"12–15",["Pause and squeeze at the top","Control the way down"],{job:"aaf41834-6bbe-4282-b34f-d1880a37d9ad"}),
-    EX("Seated Leg Curls",3,"12–15",["Hips pinned to the seat","Full curl, slow return"],{job:"68fe4897-c525-4549-9b91-30e480c1b8dd"})]},
-  Fri:{w:"Upper Body Pump",d:"Chest & Arm Priority",pin:true,lift:[
+    EX("Seated Calf Raise",3,"15",["Full stretch at the bottom","Pause at the top"]),
+    EX("Pallof Press",3,"10",["10 each side, cable at chest height","Press out and hold 2 seconds without twisting"])]},
+  Fri:{w:"Upper · Size + Power",s:"Upper",t:"upper",d:"Slams, presses, back and arms",pin:true,lift:[
+    EX("Med-Ball Slams",3,"6",["Reach tall, then slam as hard as you can","Use a slam ball or the heaviest med ball"],null,POW),
     EX("Incline DB Press",4,"8–10",["Bench at about 30°, deep stretch at the bottom","Press up over the upper chest"],{job:"6993a809-6f41-4851-b2d4-f68e85a2a61b"}),
+    EX("Seated Cable Rows",4,"10–12",["Sit tall, pull the handle to your belly button","Squeeze your shoulder blades together"],{job:"6d43ac7a-2947-4c69-946b-a4f4510d0c38"}),
     EX("Pec Deck Flyes",3,"12–15",["Slight elbow bend","Bring the pads together, 1-second squeeze"],{job:"16aea5ca-bf7f-4de9-b813-f90ecd2d41f5"}),
     EX("Cable Lateral Raises",4,"12–15",["Cable runs behind your body","Lead with the elbow up to shoulder height"],{job:"aa663113-6d39-40d6-b91a-f127f941debb"}),
+    EX("DB Shrugs",3,"12",["Straight up, hold 1 second at the top","Bigger traps help you take contact"]),
     EX("Bicep Curl / Tricep Extension Cable Superset",3,"12",["Curls, then straight into triceps","No rest between the two"],{job:"da69dd86-d57d-4568-9b1e-f9c480b0b2a0"})]},
-  Sat:{w:"Rest",d:"Recovery",pin:false,lift:[]},
-  Sun:{w:"Rest",d:"Recovery",pin:false,lift:[]}
+  Sat:{w:"Speed + Conditioning",s:"Speed",t:"speed",d:"Field: sprints, cuts, game-speed conditioning",pin:false,speed:true,lift:[
+    WARMUP,
+    DR("40-Yard Sprints",4,"40 yd",120,["90–95% effort with full recovery","Time one if you can"]),
+    DR("Jump Cut + Burst",6,"15 yd",60,["Jog 5 yards, jump-cut left or right, burst 10 yards","Alternate sides"]),
+    DR("Backpedal to Sprint",6,"10 + 10 yd",60,["Backpedal 10 yards, open your hips, sprint 10","Turn your hips fast"]),
+    DR("Repeat 20s",10,"20 yd",25,["Short rest on purpose: this is game-speed conditioning","Jog back and go again"]),
+    DR("Plank + Side Planks",3,"45 sec each",30,["Front, then each side","Keep your hips level"])]},
+  Sun:{w:"Rest",s:"Rest",t:"rest",d:"Recovery",pin:false,lift:[]}
 };
+const isGym=W=>W.lift.length>0&&!W.speed;
+/* Program calendar: 4-week blocks; the 4th week is a deload (one fewer set on lifts). */
+const PROGRAM_START=(()=>{let v=null;try{v=localStorage.getItem("dp-program-start")}catch(e){}
+  if(!v){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));v=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;try{localStorage.setItem("dp-program-start",v)}catch(e){}}
+  return v})();
+const SPRING=new Date("2027-01-11T00:00:00");
+const programDay=()=>Math.max(1,Math.floor((new Date().setHours(0,0,0,0)-new Date(PROGRAM_START+"T00:00:00"))/86400000)+1);
+const programWeek=()=>Math.floor((programDay()-1)/7)+1;
+const isDeload=()=>programWeek()%4===0;
+if(isDeload())Object.values(WEEK).forEach(W=>W.lift.forEach(x=>{if(!x.drill)x.sets=Math.max(2,x.sets-1)}));
 const MEALS=[
   {id:"wake",img:"c8b1c532-2c4f-4ef1-91ae-279dfa3930b6",t:450,n:"Wake-Up Water",k:"Hydrate",opts:["16–20 oz water right away"],why:"Rehydrate before the morning stack.",lift:false},
   {id:"pump",img:"896f04b6-20f1-434f-84f4-5331d3f2f8ee",t:490,n:"Pre-Workout Pump Hack",k:"Pump",opts:["16–20 oz cold water","A light pinch of sea salt"],why:"About 20 minutes before Planet Fitness, for more blood volume, vascularity and pump.",lift:true},
-  {id:"creatine",img:"43782c37-cf9b-4105-bd86-23d5fd74c9f0",t:570,n:"Creatine",k:"Creatine",opts:["5 g creatine with water, pre- or post-workout"],why:"Daily strength and recovery staple.",lift:true},
-  {id:"m1",t:600,n:"Meal 1 · Post-Workout Breakfast",k:"M1",img:"84912d37-f4c9-41bc-9a7f-e7df0fd4ca19",opts:["4 eggs, egg whites or scrambled eggs","+ 2 slices toast or a bagel, OR oats"],why:"Fast amino acids for GHK-Cu, and it refills muscle glycogen.",pair:["Omega-3 with this meal (or Meal 2)"]},
-  {id:"m2",t:780,n:"Meal 2 · Pre-Work Lunch",k:"M2",img:"3483591f-f85f-47e4-af95-faebdeda5218",opts:["Grilled chicken breast, OR ground beef / steak","Over white rice (or a potato base)"],why:"Simple, easily digested protein and carbs before your shift starts.",pair:["Omega-3 here if you skipped it at Meal 1"]},
-  {id:"m3",t:1080,n:"Meal 3 · Work Shift Meal",k:"M3",img:"ea82b47c-09d7-485a-afb9-6261b7b332d2",opts:["Chipotle burrito bowl: double chicken or barbacoa","White rice, cheese, guac","Or a packed clean protein bowl"],why:"High-protein, high-calorie clean fuel to sustain the vascular pump.",pair:["Keep water steady through the shift"]},
-  {id:"snack",t:1350,n:"Home · Light Snack",k:"Snack",img:"a783355d-1d47-4618-ae84-c9da8932c1e8",opts:["Light protein snack, only if hungry"],why:"Wind-down fuel without a heavy stomach before sleep.",optional:true}
+  {id:"creatine",img:"43782c37-cf9b-4105-bd86-23d5fd74c9f0",t:570,n:"Creatine",k:"Creatine",opts:["5 g creatine with water, every day"],why:"Daily strength, power and recovery staple. Take it on rest days too.",lift:false},
+  {id:"m1",t:600,n:"Meal 1 · Post-Workout Breakfast",k:"M1",img:"84912d37-f4c9-41bc-9a7f-e7df0fd4ca19",opts:["4 whole eggs (skip egg whites: you need the calories)","+ 2 slices toast or a bagel, OR a big bowl of oats"],why:"Protein and carbs right after training to start rebuilding muscle.",pair:["Omega-3 with this meal (or Meal 2)"]},
+  {id:"m2",t:780,n:"Meal 2 · Pre-Work Lunch",k:"M2",img:"3483591f-f85f-47e4-af95-faebdeda5218",opts:["8 oz chicken breast, OR ground beef / steak","Over 2 cups white rice (or potatoes)"],why:"Big, easy-to-digest protein and carbs before an 8-hour shift.",pair:["Omega-3 here if you skipped it at Meal 1"]},
+  {id:"m3",t:1080,n:"Meal 3 · Work Shift Meal",k:"M3",img:"ea82b47c-09d7-485a-afb9-6261b7b332d2",opts:["Chipotle bowl: double chicken or barbacoa","Extra white rice, cheese, guac","Or a packed protein bowl the same size"],why:"High-protein, high-calorie fuel in the middle of your shift.",pair:["Keep water steady through the shift"]},
+  {id:"shake",t:1350,n:"Mass Shake",k:"Shake",img:"a783355d-1d47-4618-ae84-c9da8932c1e8",opts:["16 oz whole milk","1 cup oats (blend them dry first)","2 tbsp peanut butter + 1 banana","1–2 scoops whey protein"],why:"About 1,000 calories and 60 g of protein in one glass. The easiest way to stay in a surplus every day."}
 ];
 function blocks(day){
-  const W=WEEK[day],L=W.lift.length>0;
+  const W=WEEK[day],L=W.lift.length>0,SP=!!W.speed;
   return [
     {s:450,e:465,n:"Wake Up & Hydrate",short:"Wake",x:"Drink 16–20 oz water.",items:["16–20 oz water"]},
     {s:465,e:510,n:"Morning Stack",short:"AM Stack",x:"Sub-Q pins, then the oral stack.",items:["Wolverine 5u Sub-Q","KPV 5u Sub-Q","GHK-Cu Sub-Q","Hims Chew","Vitamin C","B12","Zinc","Omega-3 (with Meal 1 or 2)"]},
-    {s:510,e:570,n:L?"PF · "+W.w:W.w,short:L?W.w:"Recover",x:L?W.d+". 45–60 min.":"No lifting today. Walk, stretch, recover.",items:L?["Pump hack water 20 min before","Workout logged in Train","Creatine 5 g"]:["Light walk / stretch"],go:"train"},
+    {s:510,e:570,n:SP?"Field · "+W.w:L?"PF · "+W.w:W.w,short:L?W.s:"Recover",x:SP?W.d+". 40–50 min.":L?W.d+". 60–75 min.":"No training today. Walk, stretch, recover.",items:SP?["Water bottle + 4 cones","Session logged in Train"]:L?["Pump hack water 20 min before","Workout logged in Train"]:["Light walk / stretch"],go:"train"},
     {s:600,e:780,n:"Post-Workout & Meal 1",short:"Meal 1",x:"Shower, then high protein + easy carbs.",items:["Shower","Meal 1"],go:"fuel"},
     {s:780,e:810,n:"Meal 2 · Pre-Work",short:"Meal 2",x:"Clean protein + rice before leaving.",items:["Meal 2"],go:"fuel"},
     {s:810,e:840,n:"Commute",short:"Commute",x:"Head out to work.",items:[]},
     {s:840,e:1320,n:"Work Shift",short:"Work",x:"Meal 3 at 6:00 PM. Keep water steady.",items:["Meal 3 at 6:00 PM","Steady water"],go:"fuel"},
-    {s:1350,e:1365,n:"Arrive Home",short:"Home",x:"Wind down. Light protein snack if needed.",items:["Wind down"]},
+    {s:1350,e:1365,n:"Arrive Home · Mass Shake",short:"Shake",x:"Mass shake, then wind down.",items:["Mass shake"],go:"fuel"},
     {s:1365,e:1380,n:"Evening Stack",short:"PM Stack",x:W.pin?"Glutathione pin night: 30 units Sub-Q.":"OFF night. No glutathione.",items:W.pin?["Glutathione 30u Sub-Q"]:[]},
     {s:1380,e:1410,n:"Sleep",short:"Sleep",x:"8-hour recovery window.",items:["Lights out by 11:30 PM"]}
   ];
@@ -296,7 +342,7 @@ const local={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??
 function toast(t){const el=document.createElement("div");el.className="toast";el.textContent=t;$("#app").appendChild(el);setTimeout(()=>el.remove(),2400)}
 
 /* ======================= STATE + STORAGE ======================= */
-const S={skin:local.get("dp-skin","neon"),trainDay:null,days:{},progress:[],rest:null,cut:50,upload:null,view:null,store:"local"};
+const S={skin:local.get("dp-skin-v2",null)?local.get("dp-skin","gridiron"):(local.set("dp-skin-v2",1),local.set("dp-skin","gridiron"),"gridiron"),trainDay:null,days:{},progress:[],rest:null,cut:50,upload:null,view:null,store:"local"};
 let DB=null,ASSETS=null,BASE=null;
 const today=()=>dkey(new Date());
 const dayDoc=k=>(S.days[k]||(S.days[k]={checks:{},sets:{},meals:{},water:0}));
@@ -342,12 +388,17 @@ const EXMETA={ // [increment lb, rest s, compound?, dumbbell per hand?]
   "Seated DB Shoulder Press":[5,120,1,1],"Cable Rope Pushdowns":[5,75,0,0],"Lat Pulldowns":[5,120,1,0],
   "Seated Cable Rows":[5,120,1,0],"Single-Arm DB Rows":[5,90,1,1],"Cable Face Pulls":[5,60,0,0],"Incline DB Curls":[5,75,0,1],
   "Smith Machine Squats or Leg Press":[10,150,1,0],"DB RDLs":[5,120,1,1],"Leg Extensions":[5,75,0,0],"Seated Leg Curls":[5,75,0,0],
-  "Incline DB Press":[5,120,1,1],"Pec Deck Flyes":[5,75,0,0],"Cable Lateral Raises":[5,60,0,0],"Bicep Curl / Tricep Extension Cable Superset":[5,90,0,0]};
+  "Incline DB Press":[5,120,1,1],"Pec Deck Flyes":[5,75,0,0],"Cable Lateral Raises":[5,60,0,0],"Bicep Curl / Tricep Extension Cable Superset":[5,90,0,0],
+  "Barbell Back Squat":[5,180,1,0],"Smith Machine Bench Press":[5,180,1,0],"DB Walking Lunges":[5,90,1,1],"Smith Machine Calf Raise":[10,60,0,0],
+  "Bulgarian Split Squats":[5,90,1,1],"Leg Press":[10,120,1,0],"Smith Machine Hip Thrust":[10,120,1,0],"Seated Calf Raise":[5,60,0,0],
+  "Pallof Press":[5,60,0,0],"DB Shrugs":[5,75,0,1]};
+Object.values(WEEK).forEach(W=>W.lift.forEach(x=>{if(x.drill||x.bw)EXMETA[x.n]=[0,x.drill?x.rest:x.power?120:60,0,0]}));
 const meta=n=>{const m=EXMETA[n]||[5,90,0,0];return{inc:m[0],rest:m[1],compound:!!m[2],each:!!m[3]}};
 const repRange=r=>{const p=String(r).split(/[–-]/).map(Number);return[p[0],p[1]||p[0]]};
 const e1rm=(w,r)=>w>0&&r>0?w*(1+r/30):0;
 const roundTo=(w,inc)=>Math.max(inc,Math.round(w/inc)*inc);
 const wlabel=(n,w)=>w==null?"Your pick":`${w} lb${meta(n).each?" each":""}`;
+const targetText=(ex,c)=>ex.drill?`${ex.sets} × ${ex.dist}`:ex.bw?`${ex.sets} × ${rangeLabel(c.lo,c.reps)} reps`:`${wlabel(ex.n,c.w)} × ${rangeLabel(c.lo,c.hi)}`;
 const rangeLabel=(lo,hi)=>lo===hi?`${hi}`:`${lo}–${hi}`;
 let LIFTS=local.get("dp-lifts",{}); // {exercise:[{d:"YYYY-MM-DD",t:ms,sets:[{w,r,e}]}]}
 const saveLifts=()=>local.set("dp-lifts",LIFTS);
@@ -356,6 +407,10 @@ const bestOf=sets=>sets.reduce((b,x)=>Math.max(b,e1rm(x.w,x.r)),0);
 const topSets=sets=>{const ok=sets.filter(x=>x.r>0);const w=Math.max(...ok.map(x=>x.w));return{w,top:ok.filter(x=>x.w===w)}};
 function coach(ex){
   const m=meta(ex.n),[lo,hi]=repRange(ex.reps),h=histOf(ex.n);
+  if(ex.drill)return{w:null,reps:1,lo:1,hi:1,tag:"Speed",why:ex.cues.join(". ")+"."};
+  if(ex.power)return{w:null,reps:hi,lo,hi,tag:"Max effort",why:"Every rep as explosive as possible, with full rest. End the set early if height or distance drops."};
+  if(ex.bw){const last=h[h.length-1],all=last&&last.sets.length&&last.sets.every(x=>x.r>=hi);
+    return{w:null,reps:all?hi+2:hi,lo,hi,tag:all?"+2 reps":"Bodyweight",up:all,why:all?`You hit ${hi} on every set. Aim for ${hi+2}, or slow down the lowering.`:`Clean reps, ${hi} on every set.`}}
   if(!h.length)return{w:null,reps:hi,lo,hi,tag:"Calibrate",why:`First time logging this. Pick a weight you could lift about ${hi+2} times, then stop at ${hi}. Your next targets come from what you log.`};
   const {w,top}=topSets(h[h.length-1].sets);
   const allTop=top.length>=Math.min(ex.sets,2)&&top.every(x=>x.r>=hi);
@@ -397,24 +452,25 @@ function startWorkout(day){
 }
 function sessDraft(ex){
   const log=SESS.log[ex.n],c=coach(ex);
-  if(!SESS.draft||SESS.draft.ex!==ex.n)SESS.draft={ex:ex.n,w:log.length?log[log.length-1].w:(c.w??""),r:log.length?log[log.length-1].r:c.reps,e:"good"};
+  if(!SESS.draft||SESS.draft.ex!==ex.n)SESS.draft={ex:ex.n,w:ex.bw||ex.drill?0:log.length?log[log.length-1].w:(c.w??""),r:log.length?log[log.length-1].r:c.reps,e:"good"};
   return SESS.draft;
 }
 function readInputs(){const w=$("#inW"),r=$("#inR");if(SESS&&SESS.draft){if(w)SESS.draft.w=w.value;if(r)SESS.draft.r=r.value}}
 function logSet(){
   const W=WEEK[SESS.day],ex=W.lift[SESS.i],d=sessDraft(ex),m=meta(ex.n),c=coach(ex);
-  const w=parseFloat(d.w),r=parseInt(d.r,10);
-  if(!(w>0)){toast("Enter the weight first.");return}
+  const free=ex.bw||ex.drill,w=free?0:parseFloat(d.w),r=ex.drill?1:parseInt(d.r,10);
+  if(!free&&!(w>0)){toast("Enter the weight first.");return}
   if(!(r>0)){toast("Enter how many reps you did.");return}
   const log=SESS.log[ex.n];log.push({w,r,e:d.e});
   if(SESS.day===DAYS[new Date().getDay()]){const doc=dayDoc(today());doc.sets[`${SESS.i}|${log.length-1}`]=true;saveDay(today())}
   SESS.draft={ex:ex.n,w,r:c.reps,e:"good"};
   let next;
-  if(log.length<ex.sets)next=`Set ${log.length+1} of ${ex.sets} · ${wlabel(ex.n,w)} × ${rangeLabel(c.lo,c.hi)}`;
-  else if(SESS.i<W.lift.length-1){SESS.i++;SESS.draft=null;const nx=W.lift[SESS.i],nc=coach(nx);next=`Next: ${nx.n} · ${wlabel(nx.n,nc.w)} × ${rangeLabel(nc.lo,nc.hi)}`}
-  else next="That was the last set. Finish when you're ready.";
-  SESS.rest={end:Date.now()+m.rest*1000,total:m.rest*1000,next};
-  pushRest(SESS.rest.end,next);
+  const word=ex.drill?"Rep":"Set";
+  if(log.length<ex.sets)next=`${word} ${log.length+1} of ${ex.sets} · ${ex.drill?ex.dist:free?rangeLabel(c.lo,c.reps)+" reps":wlabel(ex.n,w)+" × "+rangeLabel(c.lo,c.hi)}`;
+  else if(SESS.i<W.lift.length-1){SESS.i++;SESS.draft=null;const nx=W.lift[SESS.i],nc=coach(nx);next=`Next: ${nx.n} · ${targetText(nx,nc)}`}
+  else next="That was the last one. Finish when you're ready.";
+  if(m.rest>0){SESS.rest={end:Date.now()+m.rest*1000,total:m.rest*1000,next};pushRest(SESS.rest.end,next)}
+  else{SESS.rest=null;toast(next)}
   saveSess();render();
 }
 function askBar(v){S.finishAsk=v;render();const el=$(".sess");if(el)el.scrollTo({top:0,behavior:"smooth"})}
@@ -434,27 +490,31 @@ function finishWorkout(){
     log.forEach(x=>{vol+=x.w*x.r*(meta(ex.n).each?2:1);sets++});
     if(prev&&now>prev+.5)prs.push({n:ex.n,e:Math.round(now),gain:Math.round(now-prev)})});
   saveLifts();
-  const next=W.lift.filter(ex=>histOf(ex.n).length).map(ex=>({n:ex.n,c:coach(ex)}));
+  const next=W.lift.filter(ex=>!ex.drill&&histOf(ex.n).length).map(ex=>({n:ex.n,c:coach(ex),ex}));
   S.summary={w:W.w,dur,vol:Math.round(vol),sets,prs,next};
   if(SESS.rest)pushRest(null);
   SESS=null;saveSess();S.inSession=false;S.finishAsk=false;wake(false);render();
 }
 /* Rest-timer looks: Higgsfield loops played behind the countdown. */
 const LOOKS=[["neon","Neon Rain","looks/neon.mp4"],["hunter","Hunter","looks/quest.mp4"],["chrome","Liquid Chrome","looks/chrome.mp4"],["sky","Sky","looks/solar.mp4"],["core","Reactor","looks/core.mp4"],["hourglass","Hourglass","looks/hourglass.mp4"],["plain","Plain",""]];
-const SKIN_LOOK={neon:"neon",quest:"hunter",chrome:"chrome",solar:"sky"};
+const SKIN_LOOK={gridiron:"plain",neon:"neon",quest:"hunter",chrome:"chrome",solar:"sky"};
 const restLook=()=>{const k=local.get("dp-look",null);return LOOKS.find(l=>l[0]===k)||LOOKS.find(l=>l[0]===SKIN_LOOK[S.skin])};
 function renderSession(){
   const W=WEEK[SESS.day],n=W.lift.length,ex=W.lift[SESS.i],c=coach(ex),log=SESS.log[ex.n],d=sessDraft(ex),m=meta(ex.n);
   const med=ex.demo&&MEDIA[ex.demo.job];
   const warm=!log.length?warmups(ex,c.w??(parseFloat(d.w)||0)):[];
-  const done=log.map((x,k)=>`<div class="srow"><span class="dim">Set ${k+1}</span><span class="tnum"><b>${x.w}</b> lb × <b>${x.r}</b></span><span class="chip">${x.e}</span>${k===log.length-1?`<button class="btn" data-undo aria-label="Undo set ${k+1}">Undo</button>`:"<span></span>"}</div>`).join("");
+  const word=ex.drill?"Rep":"Set";
+  const done=log.map((x,k)=>`<div class="srow"><span class="dim">${word} ${k+1}</span><span class="tnum">${ex.drill?`<b>✓</b> ${esc(ex.dist)}`:ex.bw?`<b>${x.r}</b> reps`:`<b>${x.w}</b> lb × <b>${x.r}</b>`}</span><span class="chip">${ex.drill?"done":x.e}</span>${k===log.length-1?`<button class="btn" data-undo aria-label="Undo set ${k+1}">Undo</button>`:"<span></span>"}</div>`).join("");
   const left=Math.max(0,ex.sets-log.length-1);
-  const todo=Array.from({length:left},(_,k)=>`<div class="srow todo"><span>Set ${log.length+2+k}</span><span class="tnum">${wlabel(ex.n,c.w)} × ${rangeLabel(c.lo,c.hi)}</span><span></span><span></span></div>`).join("");
+  const todo=Array.from({length:left},(_,k)=>`<div class="srow todo"><span>${word} ${log.length+2+k}</span><span class="tnum">${ex.drill?esc(ex.dist):ex.bw?rangeLabel(c.lo,c.reps)+" reps":wlabel(ex.n,c.w)+" × "+rangeLabel(c.lo,c.hi)}</span><span></span><span></span></div>`).join("");
   const extra=log.length>=ex.sets;
   const eff=[["easy","Easy","2+ left"],["good","Good","~1 left"],["hard","Hard","0 left"]].map(([k,l,h])=>`<button data-eff="${k}" aria-pressed="${d.e===k}">${l}<small>${h}</small></button>`).join("");
-  const active=`<section class="pnl active"><div class="between"><span class="eb">${extra?"Extra set":`Set ${log.length+1} of ${ex.sets}`}</span><span class="dim small">Rest after: ${clock(m.rest*1000)}</span></div>
-    <div class="steppers">
-     <div class="stp"><button data-dw="-1" aria-label="Less weight">−</button><label for="inW"><input id="inW" inputmode="decimal" value="${esc(d.w)}" placeholder="0"><small>lb${m.each?" each":""}</small></label><button data-dw="1" aria-label="More weight">+</button></div>
+  const restTxt=m.rest>0?`Rest after: ${clock(m.rest*1000)}`:"No rest";
+  const active=ex.drill?`<section class="pnl active"><div class="between"><span class="eb">${extra?"Extra rep":`Rep ${log.length+1} of ${ex.sets}`} · ${esc(ex.dist)}</span><span class="dim small">${restTxt}</span></div>
+    <button class="btn solid startbtn" data-logset>Done${m.rest>0?" · start rest":""}</button></section>`
+   :`<section class="pnl active"><div class="between"><span class="eb">${extra?"Extra set":`Set ${log.length+1} of ${ex.sets}`}</span><span class="dim small">${restTxt}</span></div>
+    <div class="steppers"${ex.bw?' style="grid-template-columns:1fr"':""}>
+     ${ex.bw?"":`<div class="stp"><button data-dw="-1" aria-label="Less weight">−</button><label for="inW"><input id="inW" inputmode="decimal" value="${esc(d.w)}" placeholder="0"><small>lb${m.each?" each":""}</small></label><button data-dw="1" aria-label="More weight">+</button></div>`}
      <div class="stp"><button data-dr="-1" aria-label="Fewer reps">−</button><label for="inR"><input id="inR" inputmode="numeric" value="${esc(d.r)}"><small>reps</small></label><button data-dr="1" aria-label="More reps">+</button></div>
     </div>
     <div class="effort" role="group" aria-label="How did it feel">${eff}</div>
@@ -485,8 +545,8 @@ function renderSession(){
    ${finishBar}
    <div class="dots">${W.lift.map((x,j)=>`<button data-goex="${j}" class="${j===SESS.i?"cur":""} ${SESS.log[x.n].length>=x.sets?"done":""}" aria-label="${esc(x.n)}"></button>`).join("")}</div>
    ${med?`<div class="sess-demo"><video src="${med}" autoplay muted loop playsinline aria-label="${esc(ex.n)} demo"></video></div>`:""}
-   <div><div class="eb">Exercise ${SESS.i+1} of ${n} · ${ex.sets} × ${esc(ex.reps)}</div><h2 class="disp h2">${esc(ex.n)}</h2></div>
-   <section class="pnl coach"><div class="between"><span class="eb">Coach</span><span class="chip ${c.up?"hot":""}">${c.tag}</span></div><div class="tgt tnum">${wlabel(ex.n,c.w)} × ${rangeLabel(c.lo,c.hi)}</div><div class="dim small">${esc(c.why)}</div></section>
+   <div><div class="eb">${ex.drill?"Drill":"Exercise"} ${SESS.i+1} of ${n} · ${ex.sets} × ${esc(ex.drill?ex.dist:ex.reps)}</div><h2 class="disp h2">${esc(ex.n)}</h2></div>
+   <section class="pnl coach"><div class="between"><span class="eb">Coach</span><span class="chip ${c.up?"hot":""}">${c.tag}</span></div><div class="tgt tnum">${targetText(ex,c)}</div><div class="dim small">${esc(c.why)}</div></section>
    ${warm.length?`<div>${warm.map(x=>`<div class="srow warm"><span>Warm-up</span><span class="tnum">${x.w} lb × ${x.r}</span><span></span><span></span></div>`).join("")}</div>`:""}
    <div>${done}</div>${log.length?`<button class="btn" data-resetexask style="align-self:flex-start">Reset this exercise</button>`:""}${active}<div>${todo}</div>
    <ul class="cues">${ex.cues.map(q=>`<li>${esc(q)}</li>`).join("")}</ul>
@@ -499,13 +559,13 @@ function sheetSummary(){
    <div class="between"><div><div class="eb">Workout complete</div><h2 class="disp h2">${esc(x.w)}</h2></div><button class="btn" data-sumclose>Done</button></div>
    <div class="stats"><div class="pnl"><b class="tnum">${clock(x.dur)}</b><span>Time</span></div><div class="pnl"><b class="tnum">${x.sets}</b><span>Sets</span></div><div class="pnl"><b class="tnum">${x.vol.toLocaleString()}</b><span>lb moved</span></div></div>
    ${x.prs.length?`<div><div class="eb">New records</div>${x.prs.map(p=>`<div class="lift"><span>${esc(p.n)}</span><span class="pr tnum">${p.e} lb e1RM · +${p.gain}</span></div>`).join("")}</div>`:""}
-   <div><div class="eb">Coach · next time</div>${x.next.map(o=>`<div class="lift"><span>${esc(o.n)}<span class="dim small" style="display:block">${esc(o.c.why)}</span></span><span class="chip ${o.c.up?"hot":""} tnum">${wlabel(o.n,o.c.w)}</span></div>`).join("")}</div>
+   <div><div class="eb">Coach · next time</div>${x.next.map(o=>`<div class="lift"><span>${esc(o.n)}<span class="dim small" style="display:block">${esc(o.c.why)}</span></span><span class="chip ${o.c.up?"hot":""} tnum">${o.ex.bw?o.c.tag:wlabel(o.n,o.c.w)}</span></div>`).join("")}</div>
   </div></div>`;
 }
 
 /* ======================= REMINDERS (Web Push) ======================= */
 const PUSH_URL=""; // the push Worker's URL, filled in after it is deployed
-const RGROUPS=[["morning","Wake + morning stack","7:30 AM water · 7:45 AM pins and oral stack"],["gym","Gym","8:10 AM pump hack · 8:30 AM Planet Fitness (Mon, Tue, Thu, Fri)"],["meals","Meals","10:00 AM · 1:00 PM · 6:00 PM"],["night","Glutathione + lights-out","10:45 PM pin (Mon, Wed, Fri) · 11:00 PM lights-out"],["photo","Sunday progress photo","Sundays at 7:00 PM"],["rest","Rest timer","When rest ends during a workout, even if your phone is locked"]];
+const RGROUPS=[["morning","Wake + morning stack","7:30 AM water · 7:45 AM pins and oral stack"],["gym","Training","8:10 AM pump hack · 8:30 AM lift (Mon, Tue, Thu, Fri) or field speed day (Wed, Sat)"],["meals","Meals + shake","10:00 AM · 1:00 PM · 6:00 PM · 10:30 PM mass shake"],["night","Glutathione + lights-out","10:45 PM pin (Mon, Wed, Fri) · 11:00 PM lights-out"],["photo","Sunday progress photo","Sundays at 7:00 PM"],["rest","Rest timer","When rest ends during a workout, even if your phone is locked"]];
 let PUSH=local.get("dp-push",{on:false,id:null,secret:null,key:null,groups:{morning:true,gym:true,meals:true,night:true,photo:true,rest:true}});
 const savePush=()=>local.set("dp-push",PUSH);
 function buildReminders(){
@@ -515,9 +575,11 @@ function buildReminders(){
   add("morning","stack","07:45","Morning stack","Sub-Q: Wolverine 5u · KPV 5u · GHK-Cu. Oral: Hims Chew, Vit C, B12, Zinc, Omega-3.","./#today");
   add("gym","pump","08:10","Pump hack","16–20 oz cold water + a pinch of sea salt. Planet Fitness in 20 minutes.","./#fuel",L);
   L.forEach(d=>{const W=WEEK[DAYS[d]];add("gym","gym"+d,"08:30","Planet Fitness · "+W.w,W.d+". Tap to start your workout.","./#train",[d])});
+  [3,6].forEach(d=>{const W=WEEK[DAYS[d]];add("gym","speed"+d,"08:30","Field · "+W.w,W.d+". Tap to start.","./#train",[d])});
   add("meals","m1","10:00","Meal 1 · post-workout","4 eggs + 2 slices toast/bagel or oats. Omega-3 with this meal.","./#fuel");
   add("meals","m2","13:00","Meal 2 · pre-work","Chicken breast or ground beef/steak over white rice.","./#fuel");
-  add("meals","m3","18:00","Meal 3","Chipotle bowl: double chicken or barbacoa, white rice, cheese, guac.","./#fuel");
+  add("meals","m3","18:00","Meal 3","Chipotle bowl: double chicken or barbacoa, extra rice, cheese, guac.","./#fuel");
+  add("meals","shake","22:30","Mass shake","Milk, oats, peanut butter, banana, whey. About 1,000 calories.","./#fuel");
   add("night","gluta","22:45","Glutathione pin","30 units Sub-Q tonight.","./#today",[1,3,5]);
   add("night","sleep","23:00","Lights out","Your 8-hour recovery window starts now.","./#today");
   add("photo","photo","19:00","Weekly check-in","Take this week's progress photo.","./#progress",[0]);
@@ -587,6 +649,35 @@ function sheetRemind(){
   </div></div>`;
 }
 
+/* ======================= DAILY FIRE ======================= */
+// One line a day, tied to the program day. Every two weeks it moves up a level and the tone gets harder.
+const FIRE_LEVELS=["Foundation","Discipline","Grit","Relentless","Takeover"];
+const FIRE=[
+ ["Day one of the climb. Nobody's watching yet. That's the point.","Show up today. That's the whole job right now.","The habit is the hard part. The weight comes later.","You don't have to feel ready. You have to be on time.","Every rep today is a deposit. Spring is the withdrawal.","Small reps, stacked daily, build a back nobody can tackle.","Eat, lift, sleep, repeat. Boring is how you get big.","You chose this. Today you prove you meant it.","One more good day. Then do it again tomorrow.","Strong running backs are built in empty gyms.","You're not starting over. You're starting stronger.","Win the morning and the rest of the day follows.","Consistency beats talent when talent sleeps in.","Two weeks of showing up. Now it's who you are."],
+ ["Motivation got you here. Discipline keeps you here.","Nobody hands you carries in spring. You earn them in November.","Your body is adapting. Feed it and keep pushing.","The rack doesn't care how you feel. Load the bar.","Tired is a feeling. Done is a decision. You're not done.","Out-work the depth chart before you ever see it.","Get comfortable being uncomfortable. That's where speed lives.","Miss the shake, miss the gains. Finish the plate.","Discipline is choosing what you want most over what you want now.","You're stronger than last month. Prove it again today.","The guy you're competing with is training right now.","Hit every rep like you've been waiting all off-season. You have.","Bad days still count if you show up.","A month in. You're not the same player."],
+ ["This is where most people quit. You're not most people.","Run like the whole defense is between you and the end zone.","Pain is information. Quitting is a decision.","Every rep is a broken tackle you'll make in spring.","Make the squat rack your second home.","You won't get tired in the fourth quarter if you train like this now.","Hunger is a skill. Stay starving.","Lower your pad level. Raise your standard.","Nobody remembers the easy carries. Earn the hard ones.","Stack the weeks. Stack the weight. Stack the yards.","The scale is moving. So is the bar. Keep both going.","Run through the doubt like it's an arm tackle.","You're building the back you always said you'd be.","Six weeks deep. The grind is working."],
+ ["Relentless means going again when nobody would blame you for stopping.","Every defense you face in spring will feel this work.","Speed is earned in silence. Make noise in spring.","There's no off button now. Only the next rep.","You're not chasing the starting job. You're taking it.","Train so they need three guys to bring you down.","Champions are built on days exactly like today.","Your legs are weapons now. Sharpen them.","Nothing gets between you and the goal line. Not even you.","Be the hardest worker in the building, every set.","The version of you that skips today doesn't exist anymore.","The work is loud now. Let it speak.","Another level. Same hunger.","Eight weeks in. They're going to wonder what happened to you."],
+ ["Spring is close. This is the takeover.","Walk in like you already own the depth chart.","Everything you built is about to be on film.","No regrets in spring. Empty the tank today.","You earned this body. Now go use it.","Run angry. Lift angrier. Finish everything.","There's no ceiling on what you're becoming.","This is the work nobody saw. Spring is when they find out.","Be the reason the defense watches extra film.","Every day now is game prep. Treat it like one.","You were made for this. Prove it one more day.","Take the handoff. Hit the hole. Don't stop until the whistle.","Legacy is built in reps like these.","Day after day, rep after rep. Nobody outworks you."]
+];
+const FIRE_SESSION={
+ lower:["Leg day. Power wins carries.","Lower day. Drive every rep through the floor.","Squats and jumps today. Every rep is a broken tackle.","Leg day. Make the bar move fast.","Lower day. Build legs nobody can bring down."],
+ upper:["Upper day. Build the frame that takes hits.","Upper day. Strong arms protect the ball.","Upper day. Stiff-arm strength starts here.","Upper day. Press like you're shedding a linebacker.","Upper day. Armor up for contact."],
+ speed:["Speed day. Every step, full intent.","Speed day. The first three steps decide the play.","Field day. Burst, cut, go.","Speed day. Make every defender's angle wrong.","Speed day. Nobody catches you from behind."],
+ rest:["Rest day. Recovery is where you grow.","Rest day. Eat big and sleep long.","Rest day. Let the work settle in.","Rest day. Recharge the weapon.","Rest day. Tomorrow you go harder."]};
+function dailyFire(){
+  const d=programDay(),tier=Math.min(4,Math.floor((d-1)/14)),idx=tier<4?(d-1)%14:(d-57)%14;
+  const W=WEEK[DAYS[new Date().getDay()]],wks=Math.max(0,Math.ceil((SPRING-Date.now())/604800000));
+  let sess=FIRE_SESSION[W.t||"rest"][tier];
+  if(isDeload()&&W.t!=="rest")sess+=" Deload week: lighter on purpose so the next block hits harder.";
+  const when=W.lift.length?` ${W.speed?"Field":"Planet Fitness"} at 8:30 AM.`:"";
+  return`<section class="pnl pad fire" style="display:flex;flex-direction:column;gap:8px">
+   <div class="between"><span class="eb">Day ${d} · ${FIRE_LEVELS[tier]}</span><span class="dim small tnum">${wks} weeks to spring</span></div>
+   <p class="disp" style="font-size:24px;margin:0">${esc(FIRE[tier][idx])}</p>
+   <span class="small">${esc(sess)}${when}</span>
+   <div class="lvl" aria-label="Level ${tier+1} of 5">${FIRE_LEVELS.map((_,k)=>`<i class="${k<=tier?"on":""}"></i>`).join("")}</div>
+  </section>`;
+}
+
 /* ======================= TODAY ======================= */
 function pt(m,r){const a=(m/1440)*2*Math.PI-Math.PI/2;return[160+r*Math.cos(a),160+r*Math.sin(a)]}
 function arcPath(s,e,r){const[x1,y1]=pt(s,r),[x2,y2]=pt(e,r),lg=(e-s)>720?1:0;return`M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 ${lg} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`}
@@ -599,6 +690,7 @@ function pageToday(){
   const title=I.inB?I.cur.short:I.next?I.next.short:"Sleep",sub=I.inB?dur(I.cur.e-m)+" left":I.next?"in "+dur(I.next.s-m):"Alarm 7:30a";
   const items=focus&&focus.items.length?`<div class="list">${focus.items.map((t,j)=>{const k=fi+"|"+j,on=doc.checks[k];return`<button class="${on?"on":""}" data-ck="${k}"><span class="chk"></span><span>${esc(t)}</span></button>`}).join("")}</div>`:"";
   return`<div class="between"><div><div class="eb">${day} · ${new Date().toLocaleDateString(undefined,{month:"short",day:"numeric"})}</div><h1 class="disp h1">${esc(W.w)}</h1></div><span class="chip ${W.pin?"hot":""}">Gluta ${W.pin?"PIN":"OFF"}</span></div>
+  ${dailyFire()}
   <div class="dial"><svg viewBox="0 0 320 320" aria-label="Day dial"><path d="${arcPath(1410,1890,R)}" fill="none" stroke="var(--s-track)" stroke-width="22"/>${arcs}${ticks}
    <line x1="${bx}" y1="${by}" x2="${hx}" y2="${hy}" stroke="var(--s-fg)" stroke-width="3" stroke-linecap="round"/><circle cx="${hx}" cy="${hy}" r="5" fill="var(--s-fg)"/>
    <text x="160" y="138" text-anchor="middle" font-size="10" letter-spacing="2" fill="var(--s-a2)">${I.inB?"NOW":I.next?"UP NEXT · "+fmtS(I.next.s).toUpperCase():"OFF THE CLOCK"}</text>
@@ -612,36 +704,49 @@ function pageToday(){
 /* ======================= TRAIN ======================= */
 function pageTrain(){
   const todayName=DAYS[new Date().getDay()],day=S.trainDay||todayName,W=WEEK[day],isToday=day===todayName,doc=dayDoc(today());
-  const strip=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<button data-tday="${d}" aria-pressed="${d===day}" class="${d===todayName?"today":""}">${d}<small>${WEEK[d].lift.length?WEEK[d].w.replace("Upper Body ",""):"Rest"}</small></button>`).join("");
+  const strip=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<button data-tday="${d}" aria-pressed="${d===day}" class="${d===todayName?"today":""}">${d}<small>${WEEK[d].s}</small></button>`).join("");
   let doneSets=0,totSets=0;W.lift.forEach((x,i)=>{totSets+=x.sets;for(let s=0;s<x.sets;s++)if(isToday&&doc.sets[`${i}|${s}`])doneSets++});
   const head=`<div class="days">${strip}</div>
-   <div class="between"><div><div class="eb">${isToday?"Today":day} · 8:30 AM · Planet Fitness</div><h1 class="disp h1">${esc(W.w)}</h1><span class="dim">${esc(W.d)}${W.lift.length?" · 45–60 min":""}</span></div>
-   ${W.lift.length?`<div style="text-align:right"><div class="disp h2 tnum">${doneSets}/${totSets}</div><span class="dim" style="font-size:11px">sets</span></div>`:""}</div>`;
-  if(!W.lift.length)return head+`<section class="pnl pad" style="display:flex;flex-direction:column;gap:8px"><h2 class="disp h2">Recovery day</h2><span class="dim">No lifting on the split today. Light walk, stretch, hit your water. ${W.pin?"Glutathione pin tonight at 10:45 PM.":"Glutathione is OFF tonight."}</span></section>`;
+   <section class="pnl pad between" style="padding:10px 14px"><div><div class="eb">Running back · off-season</div><b>Week ${programWeek()}${isDeload()?" · Deload":""}</b> <span class="dim small">${isDeload()?"One fewer set, same weights. Let your body catch up.":"Block "+(Math.floor((programWeek()-1)/4)+1)+", week "+(((programWeek()-1)%4)+1)+" of 4"}</span></div><div style="text-align:right"><b class="tnum">${Math.max(0,Math.ceil((SPRING-Date.now())/604800000))}</b><span class="dim small" style="display:block">weeks to spring</span></div></section>
+   <div class="between"><div><div class="eb">${isToday?"Today":day} · 8:30 AM · ${W.speed?"Field":"Planet Fitness"}</div><h1 class="disp h1">${esc(W.w)}</h1><span class="dim">${esc(W.d)}${W.lift.length?(W.speed?" · 40–50 min":" · 60–75 min"):""}</span></div>
+   ${W.lift.length?`<div style="text-align:right"><div class="disp h2 tnum">${doneSets}/${totSets}</div><span class="dim" style="font-size:11px">${W.speed?"reps":"sets"}</span></div>`:""}</div>`;
+  if(!W.lift.length)return head+`<section class="pnl pad" style="display:flex;flex-direction:column;gap:8px"><h2 class="disp h2">Recovery day</h2><span class="dim">No training today. Light walk, stretch, hit your water. ${W.pin?"Glutathione pin tonight at 10:45 PM.":"Glutathione is OFF tonight."}</span></section>`;
   const start=SESS?`<section class="pnl resume"><div><div class="eb">Workout in progress</div><b>${esc(WEEK[SESS.day].w)}</b> · <span class="tnum">${clock(Date.now()-SESS.start)}</span></div><button class="btn solid" data-resume>Resume</button></section>`
     :`<button class="btn startbtn" data-start="${day}">Start ${esc(W.w)}</button>`;
   const savedToday=!SESS&&W.lift.filter(x=>histOf(x.n).some(s=>s.d===today())).length;
   const saved=savedToday?(S.trainAsk===day
       ?`<section class="pnl pad" style="display:flex;flex-direction:column;gap:8px" role="alertdialog"><b>Remove today's ${esc(W.w)}?</b><span class="dim small">Deletes the sets saved today for these exercises. The coach goes back to your previous targets.</span><div class="row"><button class="btn" data-trainno>Cancel</button><button class="btn solid" data-removetoday="${day}">Remove</button></div></section>`
       :`<section class="pnl resume" style="border-color:var(--s-border)"><div><div class="eb">Saved today</div><b>${savedToday} exercise${savedToday===1?"":"s"} logged</b></div><button class="btn" data-removeask="${day}">Remove</button></section>`):"";
-  const pump=`<section class="pnl pad row"><span class="chip hot">8:10a</span><div><b>Pump hack</b><div class="dim" style="font-size:12px">16–20 oz cold water + a light pinch of sea salt, about 20 minutes before you walk in.</div></div></section>`;
+  const pump=W.speed?`<section class="pnl pad row"><span class="chip hot">Field</span><div><b>Bring</b><div class="dim" style="font-size:12px">Water, 4 cones (or water bottles as markers) and cleats or turf shoes. Go all-out on every rep and take the full rest: speed is trained fresh.</div></div></section>`
+   :`<section class="pnl pad row"><span class="chip hot">8:10a</span><div><b>Pump hack</b><div class="dim" style="font-size:12px">16–20 oz cold water + a light pinch of sea salt, about 20 minutes before you walk in.</div></div></section>`;
   const cards=W.lift.map((x,i)=>{
     const med=x.demo&&MEDIA[x.demo.job];
     const demo=med?`<video src="${med}" autoplay muted loop playsinline preload="metadata" aria-label="${esc(x.n)} demo"></video>`:`<div class="scan"></div><div class="lbl"><span class="disp h3">${esc(x.n)}</span><span class="dim" style="font-size:11px">${x.demo?"Higgsfield demo is ready. It plays here once media access is on.":"Demo not generated yet"}</span></div>`;
     const c=coach(x),h=histOf(x.n),last=h[h.length-1];
     const trend=h.map(s=>Math.round(bestOf(s.sets)));
-    const coachLine=`<div class="between"><div><div class="eb">Coach · next</div><b class="tnum">${wlabel(x.n,c.w)} × ${rangeLabel(c.lo,c.hi)}</b></div><span class="chip ${c.up?"hot":""}">${c.tag}</span></div>
-      ${last?`<div class="between small"><span class="dim tnum">Last: ${last.sets.map(s=>s.w+"×"+s.r).join(", ")}</span>${spark(trend)}</div>`:""}`;
-    return`<article class="pnl ex"><div class="demo">${demo}<span class="badge">${x.demo?"Demo":"Demo pending"}</span></div><div class="body">
-      <div class="between"><h3 class="disp h3">${esc(x.n)}</h3><span class="chip tnum">${x.sets} × ${esc(x.reps)}</span></div>
+    const coachLine=`<div class="between"><div><div class="eb">${x.drill?"Drill":"Coach · next"}</div><b class="tnum">${targetText(x,c)}</b></div><span class="chip ${c.up?"hot":""}">${c.tag}</span></div>
+      ${last&&!x.drill&&!x.bw?`<div class="between small"><span class="dim tnum">Last: ${last.sets.map(s=>s.w+"×"+s.r).join(", ")}</span>${spark(trend)}</div>`:""}`;
+    return`<article class="pnl ex">${med?`<div class="demo">${demo}<span class="badge">Demo</span></div>`:""}<div class="body">
+      <div class="between"><h3 class="disp h3">${esc(x.n)}</h3><span class="chip tnum">${x.sets} × ${esc(x.drill?x.dist:x.reps)}</span></div>
       ${coachLine}<ul class="cues">${x.cues.map(c=>`<li>${esc(c)}</li>`).join("")}</ul></div></article>`}).join("");
   const cre=`<button class="pnl pad row ${isToday&&doc.checks.creatine?"on":""}" data-ck="creatine" ${isToday?"":"disabled"} style="text-align:left"><span class="chk"></span><span><b>Creatine 5 g</b><span class="dim" style="display:block;font-size:12px">With water, pre- or post-workout.</span></span></button>`;
   return head+saved+start+pump+cards+cre;
 }
 
 /* ======================= FUEL ======================= */
+// Bulk check: weekly gain target 0.5–1 lb, from the weights logged with Sunday photos.
+function bulkCard(){
+  const pts=S.progress.map(p=>({d:new Date(p.id+"T00:00:00"),w:parseFloat(p.weight)})).filter(p=>p.w>0);
+  let msg="Log your weight with each Sunday photo. This card will tell you whether to eat more or less.",tag="";
+  if(pts.length>=2){const a=pts[pts.length-2],b=pts[pts.length-1],wk=Math.max(1,(b.d-a.d)/604800000),rate=(b.w-a.w)/wk;
+    tag=`${rate>=0?"+":""}${rate.toFixed(1)} lb/week`;
+    msg=rate<0.5?"Gaining slower than the target. Add about 250 calories a day: another half shake or an extra cup of rice."
+      :rate>1.5?"Gaining fast. Trim about 250 calories a day so most of the gain stays muscle."
+      :"Right on target. Keep eating exactly like this.";}
+  return`<section class="pnl pad" style="display:flex;flex-direction:column;gap:6px"><div class="between"><div><div class="eb">Bulk target</div><b>About 3,300–3,500 cal · 170–190 g protein</b></div>${tag?`<span class="chip hot tnum">${tag}</span>`:""}</div><span class="dim small">Goal: +0.5 to 1 lb a week. ${msg}</span></section>`;
+}
 function pageFuel(){
-  const day=DAYS[new Date().getDay()],L=WEEK[day].lift.length>0,m=nowMin(),doc=dayDoc(today());
+  const day=DAYS[new Date().getDay()],L=isGym(WEEK[day]),m=nowMin(),doc=dayDoc(today());
   const list=MEALS.filter(x=>!x.lift||L);
   const nextI=list.findIndex(x=>!doc.meals[x.id]&&x.t+90>m);
   const water=doc.water||0;
@@ -656,6 +761,7 @@ function pageFuel(){
   return`<div><div class="eb">${day} · Picky-Eater Blueprint</div><h1 class="disp h1">Fuel</h1></div>
    <section class="pnl pad" style="display:flex;flex-direction:column;gap:8px"><div class="between"><div><div class="eb">Water today</div><div class="disp h2 tnum">${water*16} oz</div></div><button class="btn solid" data-water>+16 oz</button></div>
    <div class="water">${Array.from({length:8},(_,i)=>`<i class="${i<water?"f":""}"></i>`).join("")}</div></section>
+   ${bulkCard()}
    ${cards}
    <section class="pnl pad"><div class="eb">Stack rules</div><ul class="cues" style="margin-top:6px"><li>Zinc + GHK-Cu: oral zinc keeps the zinc-to-copper balance in check.</li><li>Omega-3 softgels with Meal 1 or Meal 2. Fats boost absorption.</li><li>Pump hack: 16–20 oz cold water + sea salt 20 min before PF.</li></ul></section>`;
 }
@@ -681,7 +787,7 @@ function pageProgress(){
    :[1,2,3,4].map(i=>`<div class="frame example"><div class="ph"><div class="sil">${SIL}</div></div><span class="wk">WK 0${i}</span><span class="sub">Example frame</span></div>`).join("");
   return`<div class="between"><div><div class="eb">Weekly check-in · ${S.store==="cloud"?"saved privately":"saved on this device"}</div><h1 class="disp h1">Progress</h1></div><span class="chip ${isSun&&!has?"hot":""}">${has?"✓ This week done":isSun?"Due today":"Due Sun · "+daysLeft+"d"}</span></div>
   ${hero}
-  <div class="stats"><div class="pnl"><b class="tnum">${stats.lifts}</b><span>Lift days</span></div><div class="pnl"><b class="tnum">${stats.meals}</b><span>Meals logged</span></div><div class="pnl"><b class="tnum">${stats.pins}</b><span>Gluta pins</span></div></div>
+  <div class="stats"><div class="pnl"><b class="tnum">${stats.lifts}</b><span>Training days</span></div><div class="pnl"><b class="tnum">${stats.meals}</b><span>Meals logged</span></div><div class="pnl"><b class="tnum">${stats.pins}</b><span>Gluta pins</span></div></div>
   ${liftsSection()}
   <div class="eb">The reel</div>
   <div class="strip">${frames}</div>
@@ -690,7 +796,7 @@ function pageProgress(){
 }
 
 function liftsSection(){
-  const names=Object.keys(LIFTS).filter(n=>LIFTS[n].length);
+  const names=Object.keys(LIFTS).filter(n=>LIFTS[n].length&&LIFTS[n].some(s=>s.sets.some(x=>x.w>0)));
   if(!names.length)return`<section class="pnl pad"><div class="eb">Lifts</div><p class="dim small" style="margin:6px 0 0">Tap Start on the Train tab and log your sets. Each lift's estimated max, best set and trend show up here, and the coach adjusts your weights from them.</p></section>`;
   const rows=names.map(n=>{const h=LIFTS[n],vals=h.map(s=>Math.round(bestOf(s.sets))),cur=vals[vals.length-1],first=vals[0],best=h.flatMap(s=>s.sets).reduce((b,x)=>e1rm(x.w,x.r)>e1rm(b.w,b.r)?x:b,{w:0,r:0});
     return`<div class="lift"><span><b>${esc(n)}</b><span class="dim small" style="display:block">Best set ${best.w} × ${best.r} · ${h.length} session${h.length>1?"s":""}</span></span><span style="text-align:right"><b class="tnum">${cur} lb</b>${cur>first?` <span class="pr small">+${cur-first}</span>`:""}<span style="display:block">${spark(vals)}</span></span></div>`}).join("");
@@ -716,7 +822,7 @@ function sheetView(){
    <div class="ghostwrap"><img src="${photoSrc(p)}" alt="Week ${i+1}"></div>
    <div class="dim">${new Date(p.id+"T00:00:00").toLocaleDateString(undefined,{weekday:"short",month:"long",day:"numeric"})}${p.weight?" · "+esc(p.weight)+" lb":""}</div>
    ${p.note?`<div>${esc(p.note)}</div>`:""}
-   <div class="stats"><div class="pnl"><b>${s.lifts}</b><span>Lift days</span></div><div class="pnl"><b>${s.meals}</b><span>Meals</span></div><div class="pnl"><b>${s.pins}</b><span>Pins</span></div></div>
+   <div class="stats"><div class="pnl"><b>${s.lifts}</b><span>Training days</span></div><div class="pnl"><b>${s.meals}</b><span>Meals</span></div><div class="pnl"><b>${s.pins}</b><span>Pins</span></div></div>
    ${S.view.confirm?`<div class="row"><span class="dim" style="flex:1">Delete this week's photo for good?</span><button class="btn" data-del-no>Keep</button><button class="btn solid" data-del-yes>Delete</button></div>`:`<button class="btn" data-del>Delete photo</button>`}</div></div>`;
 }
 async function saveUpload(){
@@ -744,7 +850,7 @@ const PAGES={today:["Today",pageToday,'<circle cx="12" cy="12" r="9" fill="none"
   fuel:["Fuel",pageFuel,'<path d="M5 3v8a3 3 0 0 0 6 0V3M8 3v18M16 21V3c2.5 1 4 4 4 8h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'],
   progress:["Progress",pageProgress,'<rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/>']};
 const route=()=>{const h=location.hash.slice(1);return PAGES[h]?h:"today"};
-const SKINS={neon:"#ff4fd8",quest:"#4fb3ff",chrome:"linear-gradient(135deg,#b8c6ff,#ffb8e8)",solar:"linear-gradient(#2f7fd8,#ffb36b)"};
+const SKINS={gridiron:"linear-gradient(135deg,#1d3b29 50%,#f2b632 50%)",neon:"#ff4fd8",quest:"#4fb3ff",chrome:"linear-gradient(135deg,#b8c6ff,#ffb8e8)",solar:"linear-gradient(#2f7fd8,#ffb36b)"};
 const SKY=[[0,["#070b24","#141a46","#2a2a5e"]],[390,["#1b1d4f","#6a4a8c","#f08a5d"]],[480,["#5aa0e6","#f6c28b","#ffb36b"]],[720,["#2f7fd8","#7fbef0","#cfe8f7"]],[1020,["#3a5ba8","#e08a6b","#f7b267"]],[1140,["#22205a","#7a3f84","#e0626b"]],[1260,["#0b1035","#1e2366","#3d2f73"]],[1440,["#070b24","#141a46","#2a2a5e"]]];
 const hx=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
 const mix=(a,b,t)=>"#"+hx(a).map((v,i)=>Math.round(v+(hx(b)[i]-v)*t).toString(16).padStart(2,"0")).join("");
